@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.2</title>
+  <title>SDU V27.3</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -624,6 +624,31 @@ button.central-box{appearance:none;-webkit-appearance:none}
  .central-box{border-radius:22px !important}
 }
 
+
+/* V27.3 - Correção de navegação e padrão preto */
+.central-box,
+.central-box *,
+.central-box-footer,
+.central-box-footer *{
+  color:#111 !important;
+}
+.central-box{
+  pointer-events:auto !important;
+  user-select:none;
+  -webkit-tap-highlight-color:rgba(245,196,0,.18);
+  touch-action:manipulation;
+}
+.central-box *{
+  pointer-events:none !important;
+}
+.central-box-footer{
+  text-decoration:none !important;
+}
+a{color:#111}
+@media(max-width:760px){
+  .central-box{cursor:pointer}
+}
+
 </style>
 </head>
 <body>
@@ -642,7 +667,7 @@ button.central-box{appearance:none;-webkit-appearance:none}
     <p class="landing-subtitle">Escolha o ambiente ideal para acessar informações estratégicas da Fundação Solidaridad.</p>
 
     <div class="central-grid">
-      <button class="central-box" id="openDadosBtn" type="button">
+      <button class="central-box" id="openDadosBtn" data-open="dados" data-open="dados" type="button">
         <div class="central-icon">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 19V5M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -656,7 +681,7 @@ button.central-box{appearance:none;-webkit-appearance:none}
         </div>
       </button>
 
-      <button class="central-box" id="openConhecimentoBtn" type="button">
+      <button class="central-box" id="openConhecimentoBtn" data-open="publicacoes" data-open="publicacoes" type="button">
         <div class="central-icon">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M5 4h10l4 4v12H5V4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -795,11 +820,14 @@ button.central-box{appearance:none;-webkit-appearance:none}
 
     function openEnvironment(source){
       setSource(source)
-      document.getElementById('landing').style.display='none'
+      const landingEl = document.getElementById('landing')
+      if(landingEl) landingEl.style.display='none'
       home.classList.add('active')
       home.style.display='flex'
+      chat.classList.remove('active')
+      document.body.classList.remove('chat-open')
       homeQuestion.value=''
-      homeQuestion.focus()
+      setTimeout(()=>homeQuestion.focus(),50)
     }
 
     function backToLanding(){
@@ -809,7 +837,8 @@ button.central-box{appearance:none;-webkit-appearance:none}
       document.body.classList.remove('chat-open')
       home.classList.remove('active')
       home.style.display='none'
-      document.getElementById('landing').style.display='flex'
+      const landingEl = document.getElementById('landing')
+      if(landingEl) landingEl.style.display='flex'
     }
 
     function updateSuggestions(){
@@ -940,22 +969,6 @@ button.central-box{appearance:none;-webkit-appearance:none}
 
     function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY))||[]}catch(_){return[]}}
     function saveConversation(){if(!currentConversation)return;const h=getHistory(),i=h.findIndex(x=>x.id===currentConversation.id);if(i>=0)h[i]=currentConversation;else h.unshift(currentConversation);localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,30)));
-document.addEventListener('click', function(e){
-  const dados = e.target.closest('#openDadosBtn');
-  const conh = e.target.closest('#openConhecimentoBtn');
-  const back = e.target.closest('#backToLandingBtn');
-  if(dados){ e.preventDefault(); openEnvironment('dados'); }
-  if(conh){ e.preventDefault(); openEnvironment('publicacoes'); }
-  if(back){ e.preventDefault(); backToLanding(); }
-}, {passive:false});
-
-document.addEventListener('touchend', function(e){
-  const dados = e.target.closest('#openDadosBtn');
-  const conh = e.target.closest('#openConhecimentoBtn');
-  if(dados){ e.preventDefault(); openEnvironment('dados'); }
-  if(conh){ e.preventDefault(); openEnvironment('publicacoes'); }
-}, {passive:false});
-
 renderHistory()}
     function renderHistory(){
       const h=getHistory()
@@ -1102,6 +1115,25 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     }
     document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)))
 
+    // V27.3 - Navegação robusta por data-open: funciona em desktop e mobile
+    document.addEventListener('click', function(e){
+      const openBtn = e.target.closest('[data-open]')
+      if(openBtn){
+        e.preventDefault()
+        e.stopPropagation()
+        openEnvironment(openBtn.dataset.open)
+        return
+      }
+
+      const backBtn = e.target.closest('#backToLandingBtn')
+      if(backBtn){
+        e.preventDefault()
+        e.stopPropagation()
+        backToLanding()
+      }
+    }, false)
+
+
             
     document.getElementById('suggestions').addEventListener('click',e=>{const chip=e.target.closest('.chip');if(chip){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');homeQuestion.value=chip.textContent.trim();homeQuestion.focus()}})
 
@@ -1130,6 +1162,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     attachVoice(document.getElementById('chatVoiceBtn'),chatQuestion)
     setSource('dados')
     home.style.display='none'
+    const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='flex'
     renderHistory()
   </script>
 </body>
