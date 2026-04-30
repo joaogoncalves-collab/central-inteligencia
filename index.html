@@ -434,6 +434,26 @@ body.chat-open .footer{
   }
 }
 
+
+/* V24 - Cards de fontes/publicações */
+.rich-response{display:grid;gap:14px}
+.rich-response-intro{color:#202124;line-height:1.6}
+.source-cards{display:grid;gap:14px;margin-top:4px}
+.source-card{display:grid;grid-template-columns:132px 1fr;gap:14px;border:1px solid var(--border);border-radius:18px;background:#fff;overflow:hidden;text-decoration:none;color:inherit;transition:.18s;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.source-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.10);border-color:#d1d5db}
+.source-thumb{width:132px;min-height:112px;background:linear-gradient(135deg,#fff8d1,#f8f9fa);display:flex;align-items:center;justify-content:center;border-right:1px solid var(--border);overflow:hidden}
+.source-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.source-thumb-fallback{width:54px;height:54px;border-radius:999px;background:var(--yellow);display:grid;place-items:center;color:#111}
+.source-thumb-fallback svg{width:26px;height:26px}
+.source-card-body{padding:14px 14px 14px 0;min-width:0;display:grid;gap:7px}
+.source-card-kicker{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.source-card-title{font-size:16px;line-height:1.35;color:#111}
+.source-card-description{font-size:13px;line-height:1.5;color:#4b5563}
+.source-card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.source-card-action{margin-top:4px;display:inline-flex;align-items:center;gap:7px;width:max-content;border:1px solid var(--yellow);border-radius:999px;padding:7px 12px;color:#111;background:var(--yellow-soft);font-size:12px}
+.source-card-action svg{width:14px;height:14px}
+@media(max-width:760px){.source-card{grid-template-columns:1fr}.source-thumb{width:100%;height:140px;border-right:0;border-bottom:1px solid var(--border)}.source-card-body{padding:14px}}
+
 </style>
 </head>
 <body>
@@ -537,6 +557,77 @@ body.chat-open .footer{
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
     function escapeHtml(t){return String(t).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
     function looksLikeHtml(t){return /<\s*(table|div|section|article|h1|h2|h3|p|ul|ol|li|span|strong|style)\b/i.test(t)}
+    function tryParseJsonResponse(content){
+      if(typeof content !== 'string') return null
+      const clean = content.trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```$/,'').trim()
+      try{return JSON.parse(clean)}catch(_){return null}
+    }
+    function normalizeCardsPayload(payload){
+      if(!payload || typeof payload !== 'object') return null
+      const cards = Array.isArray(payload.cards) ? payload.cards :
+        Array.isArray(payload.fontes) ? payload.fontes :
+        Array.isArray(payload.publicacoes) ? payload.publicacoes :
+        Array.isArray(payload.resultados) ? payload.resultados :
+        payload.url ? [payload] : []
+      if(!cards.length && payload.tipo !== 'link_card' && payload.tipo !== 'cards_fontes') return null
+      return {
+        intro: payload.intro || payload.resumo || payload.mensagem || payload.texto || '',
+        cards: cards.map(c=>({
+          titulo: c.titulo || c.title || c.nome || 'Publicação encontrada',
+          descricao: c.descricao || c.description || c.resumo || c.excerpt || '',
+          url: c.url || c.link || c.href || '',
+          imagem: c.imagem || c.image || c.thumbnail || c.og_image || c.miniatura || '',
+          fonte: c.fonte || c.source || c.site || 'Solidaridad',
+          data: c.data || c.date || c.published_at || ''
+        })).filter(c=>c.url || c.titulo)
+      }
+    }
+    function urlDomain(url){try{return new URL(url).hostname.replace('www.','')}catch(_){return ''}}
+    function buildSourceCards(payload){
+      const normalized = normalizeCardsPayload(payload)
+      if(!normalized) return null
+      const wrap = document.createElement('div')
+      wrap.className = 'rich-response'
+      if(normalized.intro){
+        const intro = document.createElement('div')
+        intro.className = 'rich-response-intro'
+        intro.textContent = normalized.intro
+        wrap.appendChild(intro)
+      }
+      const cardsWrap = document.createElement('div')
+      cardsWrap.className = 'source-cards'
+      normalized.cards.forEach(card=>{
+        const a = document.createElement('a')
+        a.className = 'source-card'
+        a.href = card.url || '#'
+        a.target = '_blank'
+        a.rel = 'noopener noreferrer'
+        const thumb = document.createElement('div')
+        thumb.className = 'source-thumb'
+        if(card.imagem){
+          const img = document.createElement('img')
+          img.src = card.imagem
+          img.alt = card.titulo
+          img.loading = 'lazy'
+          img.onerror = () => {thumb.innerHTML = '<div class="source-thumb-fallback"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17h10M7 13h10M7 9h6M5 3h10l4 4v14H5V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'}
+          thumb.appendChild(img)
+        }else{
+          thumb.innerHTML = '<div class="source-thumb-fallback"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17h10M7 13h10M7 9h6M5 3h10l4 4v14H5V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+        }
+        const body = document.createElement('div')
+        body.className = 'source-card-body'
+        const kicker = document.createElement('div'); kicker.className='source-card-kicker'; kicker.textContent = card.fonte || urlDomain(card.url) || 'Fonte institucional'
+        const title = document.createElement('div'); title.className='source-card-title'; title.textContent = card.titulo
+        const desc = document.createElement('div'); desc.className='source-card-description'; desc.textContent = card.descricao
+        const meta = document.createElement('div'); meta.className='source-card-meta'; meta.textContent = [card.data, urlDomain(card.url)].filter(Boolean).join(' • ')
+        const action = document.createElement('div'); action.className='source-card-action'; action.innerHTML = 'Abrir publicação <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        body.appendChild(kicker); body.appendChild(title); if(card.descricao) body.appendChild(desc); if(meta.textContent) body.appendChild(meta); if(card.url) body.appendChild(action)
+        a.appendChild(thumb); a.appendChild(body); cardsWrap.appendChild(a)
+      })
+      wrap.appendChild(cardsWrap)
+      return wrap
+    }
+
     function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY))||[]}catch(_){return[]}}
     function saveConversation(){if(!currentConversation)return;const h=getHistory(),i=h.findIndex(x=>x.id===currentConversation.id);if(i>=0)h[i]=currentConversation;else h.unshift(currentConversation);localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,30)));renderHistory()}
     function renderHistory(){
@@ -631,10 +722,16 @@ body.chat-open .footer{
       if(loading){
         bubble.innerHTML='<div class="thinking-wrap"><span>Pensando</span><span class="typing-dots"><span></span><span></span><span></span></span></div>'
       }else{
-const contentBox=document.createElement('div')
-        if(role==='assistant'&&looksLikeHtml(content))contentBox.innerHTML=content
-        else contentBox.textContent=content
-        bubble.appendChild(contentBox)
+const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
+        const richCards = parsedPayload ? buildSourceCards(parsedPayload) : null
+        if(richCards){
+          bubble.appendChild(richCards)
+        }else{
+          const contentBox=document.createElement('div')
+          if(role==='assistant'&&looksLikeHtml(content))contentBox.innerHTML=content
+          else contentBox.textContent=content
+          bubble.appendChild(contentBox)
+        }
       }
 
       row.appendChild(bubble);messages.appendChild(row);messages.scrollTop=messages.scrollHeight;return row
