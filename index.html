@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.4</title>
+  <title>SDU V27.6</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -692,6 +692,59 @@ body.chat-open .back-to-landing{
   }
 }
 
+
+/* V27.5 - Histórico abre/fecha corretamente */
+.drawer{
+  z-index:1500 !important;
+}
+.drawer-header{
+  position:sticky !important;
+  top:0 !important;
+  background:#fff !important;
+  z-index:1600 !important;
+  padding-bottom:12px !important;
+}
+.close-btn{
+  position:relative !important;
+  z-index:1700 !important;
+}
+.drawer.open ~ .app-header,
+body.drawer-open .header-actions{
+  z-index:1400 !important;
+}
+body.drawer-open #historyBtn{
+  opacity:.55;
+}
+
+
+/* V27.6 - Conhecimento: resumo + saiba mais */
+.rich-response{
+  display:grid;
+  gap:16px;
+}
+.rich-response-intro::before{
+  content:"Resumo";
+  display:block;
+  font-size:13px;
+  color:#6b7280;
+  margin-bottom:8px;
+}
+.rich-response-intro{
+  color:#202124;
+  line-height:1.7;
+}
+.source-card-title{
+  font-weight:600;
+}
+.source-card-action{
+  color:#111 !important;
+  font-weight:500;
+}
+.source-card-kicker,
+.source-card-meta{
+  color:#6b7280 !important;
+}
+
 </style>
 </head>
 <body>
@@ -913,9 +966,41 @@ body.chat-open .back-to-landing{
     function escapeHtml(t){return String(t).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
     function looksLikeHtml(t){return /<\s*(table|div|section|article|h1|h2|h3|p|ul|ol|li|span|strong|style)\b/i.test(t)}
     function tryParseJsonResponse(content){
-      if(typeof content !== 'string') return null
-      const clean = content.trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```$/,'').trim()
-      try{return JSON.parse(clean)}catch(_){return null}
+      let value = content
+
+      if(value && typeof value === 'object'){
+        if(value.content?.parts?.length){
+          value = value.content.parts.map(p=>p.text||'').join('')
+        }else{
+          return value
+        }
+      }
+
+      if(typeof value !== 'string') return null
+
+      let clean = value
+        .trim()
+        .replace(/^```json\s*/i,'')
+        .replace(/^```\s*/i,'')
+        .replace(/```$/,'')
+        .trim()
+
+      try{
+        const parsed = JSON.parse(clean)
+
+        if(parsed?.content?.parts?.length){
+          const nestedText = parsed.content.parts.map(p=>p.text||'').join('')
+          return tryParseJsonResponse(nestedText)
+        }
+
+        if(typeof parsed === 'string'){
+          return tryParseJsonResponse(parsed)
+        }
+
+        return parsed
+      }catch(_){
+        return null
+      }
     }
     function normalizeCardsPayload(payload){
       if(!payload || typeof payload !== 'object') return null
@@ -1002,7 +1087,7 @@ body.chat-open .back-to-landing{
         const title = document.createElement('div'); title.className='source-card-title'; title.textContent = card.titulo
         const desc = document.createElement('div'); desc.className='source-card-description'; desc.textContent = card.descricao
         const meta = document.createElement('div'); meta.className='source-card-meta'; meta.textContent = [card.data, urlDomain(card.url)].filter(Boolean).join(' • ')
-        const action = document.createElement('div'); action.className='source-card-action'; action.innerHTML = 'Abrir publicação <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        const action = document.createElement('div'); action.className='source-card-action'; action.innerHTML = 'Saiba mais <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         body.appendChild(kicker); body.appendChild(title); if(card.descricao) body.appendChild(desc); if(meta.textContent) body.appendChild(meta); if(normalizeExternalUrl(card.url)) body.appendChild(action)
         a.appendChild(thumb); a.appendChild(body); cardsWrap.appendChild(a)
       })
@@ -1054,6 +1139,7 @@ renderHistory()}
         if(c){
           openConversation(c)
           drawer.classList.remove('open')
+          document.body.classList.remove('drawer-open')
         }
       }))
 
@@ -1136,7 +1222,10 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
           ? {pergunta, tipo_saida:'link_card', fonte_consulta:'publicacoes'}
           : {pergunta, tipo_saida:mode, fonte_consulta:'dados_internos'}
         const r=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-        const t=await r.text()
+        const contentType = r.headers.get('content-type') || ''
+        const t = contentType.includes('application/json')
+          ? JSON.stringify(await r.json())
+          : await r.text()
         if(!r.ok)throw new Error(t||`Erro ${r.status}`)
         if(!t || !t.trim()) throw new Error('sem_resposta')
         loadingRow.remove();addMessage('assistant',t,mode)
@@ -1196,8 +1285,15 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     document.getElementById('homeClearBtn').addEventListener('click',()=>{homeQuestion.value='';homeStatus.textContent='';document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));homeQuestion.focus()})
     document.getElementById('newQueryBtn').addEventListener('click',()=>{currentConversation=null;messages.innerHTML='';chat.classList.remove('active');document.body.classList.remove('chat-open');document.getElementById('landing').style.display='none';home.classList.add('active');home.style.display='flex';homeQuestion.value='';homeQuestion.focus()})
     document.getElementById('printBtn').addEventListener('click',()=>window.print())
-    document.getElementById('historyBtn').addEventListener('click',()=>{renderHistory();drawer.classList.add('open')})
-    document.getElementById('closeHistoryBtn').addEventListener('click',()=>drawer.classList.remove('open'))
+    document.getElementById('historyBtn').addEventListener('click',()=>{
+      renderHistory()
+      drawer.classList.toggle('open')
+      document.body.classList.toggle('drawer-open', drawer.classList.contains('open'))
+    })
+    document.getElementById('closeHistoryBtn').addEventListener('click',()=>{
+      drawer.classList.remove('open')
+      document.body.classList.remove('drawer-open')
+    })
     document.getElementById('clearHistoryBtn').addEventListener('click',()=>confirmModal.classList.add('open'))
     document.getElementById('cancelClearBtn').addEventListener('click',()=>confirmModal.classList.remove('open'))
     document.getElementById('confirmClearBtn').addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);confirmModal.classList.remove('open');renderHistory()})
