@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.7</title>
+  <title>SDU V27.8</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -758,6 +758,35 @@ body.drawer-open #historyBtn{
   pointer-events:none;
 }
 
+
+/* V27.8 - Conhecimento sempre em cards */
+body.source-publicacoes .mode-group,
+body.source-publicacoes .chat-modes,
+body.source-publicacoes .section-label{
+  display:none !important;
+}
+body.source-publicacoes .search-box{
+  margin-top:4px;
+}
+body.source-publicacoes .chat-input-wrap{
+  gap:0 !important;
+}
+body.source-publicacoes .chat-input{
+  margin-top:0 !important;
+}
+.knowledge-hint{
+  display:none;
+  max-width:760px;
+  text-align:center;
+  color:#6b7280;
+  font-size:13px;
+  line-height:1.5;
+  margin:8px 0 16px;
+}
+body.source-publicacoes .knowledge-hint{
+  display:block;
+}
+
 </style>
 </head>
 <body>
@@ -822,6 +851,7 @@ body.drawer-open #historyBtn{
       <input id="homeQuestion" placeholder="Faça sua consulta" autocomplete="off" />
       <button class="voice-btn" id="homeVoiceBtn" title="Falar pergunta"><svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     </div>
+    <div class="knowledge-hint" id="knowledgeHint">A Central de Conhecimento retorna links e referências em cards. Para dados quantitativos, volte aos ambientes e acesse Dados.</div>
 
     <div class="suggestions" id="suggestions">
       <button class="chip">Quantos produtores ativos existem?</button>
@@ -902,6 +932,7 @@ body.drawer-open #historyBtn{
 
     function setSource(source){
       sourceConsulta = source === 'publicacoes' ? 'publicacoes' : 'dados'
+      if(sourceConsulta === 'publicacoes') mode = 'resposta'
       document.body.classList.toggle('source-publicacoes', sourceConsulta === 'publicacoes')
       document.body.classList.toggle('source-dados', sourceConsulta === 'dados')
 
@@ -916,7 +947,7 @@ body.drawer-open #historyBtn{
 
       const label = document.querySelector('.section-label')
       if(label) label.textContent = sourceConsulta === 'publicacoes'
-        ? 'A resposta virá em texto com referências:'
+        ? 'Referências encontradas:'
         : 'Quero ver a resposta em forma de:'
 
       const sendBtn = document.getElementById('homeSendBtn')
@@ -1232,7 +1263,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       try{
         const webhookUrl = sourceConsulta === 'publicacoes' ? WEBHOOK_PUBLICACOES_URL : WEBHOOK_DADOS_URL
         const payload = sourceConsulta === 'publicacoes'
-          ? {pergunta, tipo_saida:'link_card', fonte_consulta:'publicacoes'}
+          ? {pergunta, fonte_consulta:'publicacoes', formato:'link_card'}
           : {pergunta, tipo_saida:mode, fonte_consulta:'dados_internos'}
         const r=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
         const contentType = r.headers.get('content-type') || ''
