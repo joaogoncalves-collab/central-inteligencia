@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.10</title>
+  <title>SDU V27.11</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -1341,19 +1341,59 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       startChat()
       currentConversation.messages.push({role:'user',content:pergunta,mode,source:sourceConsulta})
       addMessage('user',pergunta)
-      const loadingRow=addMessage('assistant','Pensando...',mode,true)
+
+      const loadingText = sourceConsulta === 'publicacoes'
+        ? 'Consultando a base de conhecimento... Isso pode levar alguns segundos.'
+        : 'Pensando...'
+
+      const loadingRow=addMessage('assistant',loadingText,mode,true)
+
+      let timeoutId = null
+
       try{
         const webhookUrl = sourceConsulta === 'publicacoes' ? WEBHOOK_PUBLICACOES_URL : WEBHOOK_DADOS_URL
         const payload = sourceConsulta === 'publicacoes'
           ? {pergunta, fonte_consulta:'publicacoes', formato:'link_card'}
           : {pergunta, tipo_saida:mode, fonte_consulta:'dados_internos'}
-        const r=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+
+        const controller = new AbortController()
+        timeoutId = setTimeout(() => controller.abort(), 60000)
+
+        const r = await fetch(webhookUrl,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(payload),
+          signal:controller.signal
+        })
+
+        if(timeoutId){
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+
         const contentType = r.headers.get('content-type') || ''
         let t
 
         if(contentType.includes('application/json')){
           const json = await r.json()
-          const normalizedJson = Array.isArray(json) ? (json[0] || {}) : json
+
+          let normalizedJson = json
+
+          if(Array.isArray(json)){
+            if(json.length === 1 && json[0] && typeof json[0] === 'object'){
+              normalizedJson = json[0]
+            }else{
+              normalizedJson = {
+                intro:'Encontrei conteúdos relacionados à sua pesquisa.',
+                cards:json.flatMap(item => {
+                  if(!item) return []
+                  if(Array.isArray(item.cards)) return item.cards
+                  return [item]
+                }).filter(Boolean)
+              }
+            }
+          }
+
           t = JSON.stringify(normalizedJson)
         }else{
           t = await r.text()
@@ -1361,13 +1401,28 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
 
         if(!r.ok)throw new Error(t||`Erro ${r.status}`)
         if(!t || !t.trim()) throw new Error('sem_resposta')
-        loadingRow.remove();addMessage('assistant',t,mode)
+
+        loadingRow.remove()
+        addMessage('assistant',t,mode)
+
         currentConversation.messages.push({role:'assistant',content:t,mode,source:sourceConsulta})
         currentConversation.updatedAt=new Date().toLocaleString('pt-BR')
         saveConversation()
         homeStatus.textContent=''
       }catch(e){
-        loadingRow.remove();addMessage('assistant','Não consegui interpretar a resposta da base de conhecimento agora. Tente novamente em alguns segundos ou reformule sua pergunta.','resposta')
+        if(timeoutId) clearTimeout(timeoutId)
+        loadingRow.remove()
+
+        let mensagem = 'Não consegui interpretar a resposta da base de conhecimento agora. Tente novamente em alguns segundos ou reformule sua pergunta.'
+
+        if(e && e.name === 'AbortError'){
+          mensagem = 'A consulta demorou mais do que o esperado. A base pode estar processando muitos resultados agora. Tente novamente em alguns segundos.'
+        }
+
+        addMessage('assistant', JSON.stringify({
+          intro: mensagem,
+          cards: []
+        }), 'resposta')
       }
     }
     function attachVoice(button,input){
