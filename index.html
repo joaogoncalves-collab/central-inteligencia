@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.8</title>
+  <title>SDU V27.10</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -787,6 +787,76 @@ body.source-publicacoes .knowledge-hint{
   display:block;
 }
 
+
+/* V27.10 - Mobile sem sobreposição + cards resilientes */
+.knowledge-empty-state{
+  border:1px dashed var(--border);
+  border-radius:16px;
+  padding:14px;
+  color:var(--muted);
+  background:#fff;
+  font-size:13px;
+  line-height:1.5;
+}
+@media(max-width:760px){
+  body.chat-open{
+    overflow:hidden !important;
+  }
+  .chat.active{
+    display:grid !important;
+    grid-template-rows:auto 1fr auto !important;
+    height:calc(100dvh - 54px) !important;
+    min-height:calc(100dvh - 54px) !important;
+    overflow:hidden !important;
+  }
+  .chat-top{
+    position:static !important;
+    top:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+    right:auto !important;
+    width:100% !important;
+    height:auto !important;
+    padding:10px 14px 6px !important;
+    display:flex !important;
+    gap:10px !important;
+    justify-content:space-between !important;
+    align-items:center !important;
+    background:var(--chat-bg) !important;
+    pointer-events:auto !important;
+    z-index:5 !important;
+  }
+  .chat-top .pill-btn,
+  #newQueryBtn,
+  #printBtn{
+    flex:1 1 0 !important;
+    width:auto !important;
+    max-width:none !important;
+    height:40px !important;
+    max-height:40px !important;
+    padding:0 10px !important;
+    font-size:13px !important;
+    background:#fff !important;
+    white-space:nowrap !important;
+  }
+  .messages{
+    min-height:0 !important;
+    overflow:auto !important;
+    padding:14px 14px 18px !important;
+    gap:14px !important;
+  }
+  .bubble{
+    max-width:100% !important;
+  }
+  .chat-input-area{
+    position:relative !important;
+    bottom:auto !important;
+    z-index:10 !important;
+    padding:10px 12px calc(12px + env(safe-area-inset-bottom)) !important;
+    background:#fff !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1012,6 +1082,10 @@ body.source-publicacoes .knowledge-hint{
     function tryParseJsonResponse(content){
       let value = content
 
+      if(Array.isArray(value)){
+        value = value[0] || null
+      }
+
       if(value && typeof value === 'object'){
         if(value.content?.parts?.length){
           value = value.content.parts.map(p=>p.text||'').join('')
@@ -1047,15 +1121,17 @@ body.source-publicacoes .knowledge-hint{
       }
     }
     function normalizeCardsPayload(payload){
+      if(Array.isArray(payload)) payload = payload[0] || null
       if(!payload || typeof payload !== 'object') return null
       const cards = Array.isArray(payload.cards) ? payload.cards :
         Array.isArray(payload.fontes) ? payload.fontes :
         Array.isArray(payload.publicacoes) ? payload.publicacoes :
         Array.isArray(payload.resultados) ? payload.resultados :
         payload.url ? [payload] : []
-      if(!cards.length && payload.tipo !== 'link_card' && payload.tipo !== 'cards_fontes') return null
+      const intro = payload.intro || payload.resumo || payload.mensagem || payload.texto || ''
+      if(!cards.length && !intro && payload.tipo !== 'link_card' && payload.tipo !== 'cards_fontes') return null
       return {
-        intro: payload.intro || payload.resumo || payload.mensagem || payload.texto || '',
+        intro,
         cards: cards.map(c=>({
           titulo: c.titulo || c.title || c.nome || 'Publicação encontrada',
           descricao: c.descricao || c.description || c.resumo || c.excerpt || '',
@@ -1099,6 +1175,12 @@ body.source-publicacoes .knowledge-hint{
       }
       const cardsWrap = document.createElement('div')
       cardsWrap.className = 'source-cards'
+      if(!normalized.cards.length){
+        const empty = document.createElement('div')
+        empty.className = 'knowledge-empty-state'
+        empty.textContent = 'Nenhum conteúdo relevante foi encontrado na base atual. Tente reformular sua pergunta ou consultar novamente após a próxima atualização da base.'
+        cardsWrap.appendChild(empty)
+      }
       normalized.cards.forEach(card=>{
         const hasUrl = Boolean(normalizeExternalUrl(card.url))
         const a = document.createElement(hasUrl ? 'a' : 'div')
@@ -1267,9 +1349,16 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
           : {pergunta, tipo_saida:mode, fonte_consulta:'dados_internos'}
         const r=await fetch(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
         const contentType = r.headers.get('content-type') || ''
-        const t = contentType.includes('application/json')
-          ? JSON.stringify(await r.json())
-          : await r.text()
+        let t
+
+        if(contentType.includes('application/json')){
+          const json = await r.json()
+          const normalizedJson = Array.isArray(json) ? (json[0] || {}) : json
+          t = JSON.stringify(normalizedJson)
+        }else{
+          t = await r.text()
+        }
+
         if(!r.ok)throw new Error(t||`Erro ${r.status}`)
         if(!t || !t.trim()) throw new Error('sem_resposta')
         loadingRow.remove();addMessage('assistant',t,mode)
@@ -1278,7 +1367,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         saveConversation()
         homeStatus.textContent=''
       }catch(e){
-        loadingRow.remove();addMessage('assistant','Desculpe, não consegui encontrar uma boa resposta para sua pergunta. Gostaria de perguntar de outra forma?','resposta')
+        loadingRow.remove();addMessage('assistant','Não consegui interpretar a resposta da base de conhecimento agora. Tente novamente em alguns segundos ou reformule sua pergunta.','resposta')
       }
     }
     function attachVoice(button,input){
