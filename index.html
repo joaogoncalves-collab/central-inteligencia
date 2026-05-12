@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.11</title>
+  <title>SDU V27.12</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -497,7 +497,7 @@ body.chat-open .footer{
 .central-grid{
   width:100%;
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:repeat(3,1fr);
   gap:18px;
   margin-top:8px;
 }
@@ -857,6 +857,37 @@ body.source-publicacoes .knowledge-hint{
   }
 }
 
+
+/* V27.12 - Mapeamento com I.A */
+body.source-mapeamento .home,
+body.source-mapeamento .chat{display:none!important}
+.mapping{display:none;max-width:980px;width:100%;margin:0 auto;padding:54px 24px 48px;flex:1}
+.mapping.active{display:flex;flex-direction:column;gap:18px}
+.mapping-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;margin-bottom:10px}
+.mapping-title{font-size:26px;font-weight:600;margin:0}
+.mapping-subtitle{color:var(--muted);line-height:1.6;max-width:760px;margin:0;font-size:14px}
+.mapping-card{border:1px solid var(--border);background:#fff;border-radius:24px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.mapping-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mapping-field{display:grid;gap:8px;margin-bottom:14px}
+.mapping-label{color:var(--muted);font-size:13px}
+.mapping-select,.mapping-input{width:100%;border:1px solid var(--border);border-radius:16px;padding:13px 14px;font-size:14px;background:#fff;outline:none}
+.mapping-select:focus,.mapping-input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(245,196,0,.16)}
+.question-box{display:grid;gap:10px;border:1px solid var(--border);border-radius:18px;padding:16px;background:#fafafa}
+.question-box strong{font-weight:600}.question-box p{margin:0;line-height:1.55}
+.evidence-actions{display:flex;gap:10px;flex-wrap:wrap}.file-input-hidden{display:none}
+.preview-wrap{display:none;gap:12px;align-items:flex-start;border:1px solid var(--border);background:#fff;border-radius:18px;padding:12px;margin-top:12px}
+.preview-wrap.active{display:flex}.preview-img{width:120px;height:90px;border-radius:14px;object-fit:cover;border:1px solid var(--border);background:#f3f4f6}
+.preview-meta{min-width:0;flex:1;color:#4b5563;font-size:13px;line-height:1.5}
+.mapping-result{display:none}.mapping-result.active{display:block}
+.ai-result{display:grid;gap:14px}.ai-status-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ai-badge{display:inline-flex;align-items:center;border-radius:999px;padding:7px 12px;font-size:13px;border:1px solid var(--border);background:#fff}
+.ai-badge.conforme{background:#e6f4ea;border-color:#b7dfc2;color:#137333}.ai-badge.parcialmente_conforme{background:#fff8d1;border-color:#f5c400;color:#6b4e00}.ai-badge.nao_conforme{background:#fce8e6;border-color:#f2c7c3;color:#b3261e}.ai-badge.inconclusivo{background:#f3f4f6;border-color:#d1d5db;color:#374151}
+.ai-section{border-top:1px solid var(--border);padding-top:12px}.ai-section-title{color:var(--muted);font-size:13px;margin-bottom:6px}
+.ai-list{margin:0;padding-left:18px;line-height:1.55}.ai-point{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff;line-height:1.55}.ai-point.strong{background:#e6f4ea;border-color:#b7dfc2}.ai-point.weak{background:#fce8e6;border-color:#f2c7c3}
+.mapping-status{min-height:20px;color:var(--muted);font-size:14px}.mapping-status.error{color:var(--red)}.mapping-status.success{color:var(--green)}
+body.source-mapeamento .landing{display:none!important}
+@media(max-width:760px){.mapping{padding:28px 14px calc(24px + env(safe-area-inset-bottom))}.mapping-title{font-size:22px}.mapping-grid{grid-template-columns:1fr}.mapping-card{border-radius:20px;padding:18px}.evidence-actions{display:grid;grid-template-columns:1fr}.evidence-actions .btn{width:100%}.preview-wrap{flex-direction:column}.preview-img{width:100%;height:190px}}
+
 </style>
 </head>
 <body>
@@ -902,6 +933,74 @@ body.source-publicacoes .knowledge-hint{
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </button>
+
+      <button class="central-box" id="openMapeamentoBtn" data-open="mapeamento" type="button">
+        <div class="central-icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h4l2-2h4l2 2h4v12H4V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="central-box-title">Mapeamento com I.A</div>
+        <div class="central-box-desc">Envie uma foto ou arquivo como evidência e receba uma avaliação automática com base nas regras do checklist.</div>
+        <div class="central-box-footer">Entrar em Mapeamento
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </button>
+    </div>
+  </main>
+
+  <main class="mapping" id="mapping">
+    <button class="pill-btn back-to-landing" id="backToLandingMappingBtn" type="button">← Voltar aos ambientes</button>
+    <div class="mapping-header">
+      <img class="logo" src="solidaridad-logo.png" alt="Solidaridad" />
+      <h1 class="mapping-title">Mapeamento com I.A</h1>
+      <p class="mapping-subtitle">Selecione uma questão, envie uma evidência por foto ou arquivo e receba uma avaliação técnica com base na resposta esperada.</p>
+    </div>
+
+    <div class="mapping-grid">
+      <section class="mapping-card">
+        <div class="mapping-field">
+          <label class="mapping-label" for="mappingQuestionSelect">Questão</label>
+          <select class="mapping-select" id="mappingQuestionSelect">
+            <option value="Q1971_laranja_cocacola" selected>Q1971 - Tanques ou tambores de armazenamento</option>
+          </select>
+        </div>
+
+        <div class="question-box" id="mappingQuestionBox">
+          <p><strong>Questão:</strong> Como são os tanques ou tambores de armazenamento de combustíveis e lubrificantes?</p>
+          <p><strong>Recomendação:</strong> Os tanques ou tambores de armazenamento devem ser suspensos ou com estruturas para conter vazamento.</p>
+        </div>
+
+        <div class="mapping-field" style="margin-top:16px">
+          <label class="mapping-label">Evidência</label>
+          <div class="evidence-actions">
+            <button class="btn primary" id="cameraEvidenceBtn" type="button">Tirar foto</button>
+            <button class="btn" id="fileEvidenceBtn" type="button">Escolher arquivo</button>
+          </div>
+          <input class="file-input-hidden" id="cameraEvidenceInput" type="file" accept="image/*" capture="environment" />
+          <input class="file-input-hidden" id="fileEvidenceInput" type="file" accept="image/*,.pdf" />
+        </div>
+
+        <div class="preview-wrap" id="evidencePreviewWrap">
+          <img class="preview-img" id="evidencePreviewImg" alt="Prévia da evidência" />
+          <div class="preview-meta">
+            <div id="evidenceFileName">Nenhum arquivo selecionado</div>
+            <div id="evidenceFileType"></div>
+            <div id="evidenceFileSize"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="sendEvidenceBtn" type="button">Avaliar evidência</button>
+          <button class="btn" id="clearEvidenceBtn" type="button">Limpar</button>
+        </div>
+        <div class="mapping-status" id="mappingStatus"></div>
+      </section>
+
+      <section class="mapping-card mapping-result" id="mappingResultCard">
+        <div id="mappingResult"></div>
+      </section>
     </div>
   </main>
 
@@ -994,17 +1093,19 @@ body.source-publicacoes .knowledge-hint{
   <script>
     const WEBHOOK_DADOS_URL='https://joaogoncalves.app.n8n.cloud/webhook/pergunta'
     const WEBHOOK_PUBLICACOES_URL='https://joaogoncalves.app.n8n.cloud/webhook/publicacoes'
+    const WEBHOOK_AVALIACAO_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia'
     const HISTORY_KEY='central_inteligente_conversas_v10'
-    const home=document.getElementById('home'),chat=document.getElementById('chat'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
+    const home=document.getElementById('home'),chat=document.getElementById('chat'),mapping=document.getElementById('mapping'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
     let mode='resposta',sourceConsulta='dados',currentConversation=null
 
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
 
     function setSource(source){
-      sourceConsulta = source === 'publicacoes' ? 'publicacoes' : 'dados'
+      sourceConsulta = source === 'publicacoes' ? 'publicacoes' : (source === 'mapeamento' ? 'mapeamento' : 'dados')
       if(sourceConsulta === 'publicacoes') mode = 'resposta'
       document.body.classList.toggle('source-publicacoes', sourceConsulta === 'publicacoes')
       document.body.classList.toggle('source-dados', sourceConsulta === 'dados')
+      document.body.classList.toggle('source-mapeamento', sourceConsulta === 'mapeamento')
 
       const placeholder = sourceConsulta === 'publicacoes'
         ? 'Pergunte sobre publicações, artigos ou temas institucionais'
@@ -1032,10 +1133,21 @@ body.source-publicacoes .knowledge-hint{
       setSource(source)
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='none'
-      home.classList.add('active')
-      home.style.display='flex'
       chat.classList.remove('active')
       document.body.classList.remove('chat-open')
+
+      if(sourceConsulta === 'mapeamento'){
+        home.classList.remove('active')
+        home.style.display='none'
+        mapping.classList.add('active')
+        mapping.style.display='flex'
+        return
+      }
+
+      mapping.classList.remove('active')
+      mapping.style.display='none'
+      home.classList.add('active')
+      home.style.display='flex'
       homeQuestion.value=''
       setTimeout(()=>homeQuestion.focus(),50)
     }
@@ -1047,6 +1159,8 @@ body.source-publicacoes .knowledge-hint{
       document.body.classList.remove('chat-open')
       home.classList.remove('active')
       home.style.display='none'
+      mapping.classList.remove('active')
+      mapping.style.display='none'
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='flex'
     }
@@ -1425,6 +1539,158 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         }), 'resposta')
       }
     }
+
+    const MAPPING_QUESTIONS = {
+      "Q1971_laranja_cocacola": {
+        id_question:"Q1971_laranja_cocacola",
+        title:"Q1971 - Tanques ou tambores de armazenamento",
+        question_txt:"Como são os tanques ou tambores de armazenamento de combustíveis e lubrificantes?",
+        recommendation:"Os tanques ou tambores de armazenamento devem ser suspensos ou com estruturas para conter vazamento.",
+        strong_point:"Tanques ou tambores de combustíveis/lubrificantes armazenados de forma suspensa ou com estrutura de contenção para vazamentos.",
+        weak_point:"Tanques ou tambores de combustíveis/lubrificantes sem evidência suficiente de suspensão ou contenção para vazamentos."
+      }
+    }
+
+    let selectedEvidenceFile = null
+    let selectedEvidenceBase64 = ""
+
+    function formatBytes(bytes){
+      if(!bytes && bytes !== 0) return ''
+      if(bytes < 1024) return bytes + ' B'
+      if(bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+    }
+
+    function updateMappingQuestion(){
+      const select = document.getElementById('mappingQuestionSelect')
+      const box = document.getElementById('mappingQuestionBox')
+      const q = MAPPING_QUESTIONS[select.value]
+      if(!q || !box) return
+      box.innerHTML = `
+        <p><strong>Questão:</strong> ${escapeHtml(q.question_txt)}</p>
+        <p><strong>Recomendação:</strong> ${escapeHtml(q.recommendation)}</p>
+      `
+    }
+
+    function fileToBase64(file){
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '')
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+    }
+
+    async function handleEvidenceFile(file){
+      if(!file) return
+      selectedEvidenceFile = file
+      selectedEvidenceBase64 = await fileToBase64(file)
+
+      const wrap = document.getElementById('evidencePreviewWrap')
+      const img = document.getElementById('evidencePreviewImg')
+      document.getElementById('evidenceFileName').textContent = file.name || 'evidência'
+      document.getElementById('evidenceFileType').textContent = file.type || 'tipo não identificado'
+      document.getElementById('evidenceFileSize').textContent = formatBytes(file.size)
+
+      if(file.type && file.type.startsWith('image/')){
+        img.src = URL.createObjectURL(file)
+        img.style.display = 'block'
+      }else{
+        img.removeAttribute('src')
+        img.style.display = 'none'
+      }
+
+      wrap.classList.add('active')
+      document.getElementById('mappingStatus').textContent = 'Evidência carregada. Clique em Avaliar evidência.'
+      document.getElementById('mappingStatus').className = 'mapping-status success'
+    }
+
+    function clearEvidence(){
+      selectedEvidenceFile = null
+      selectedEvidenceBase64 = ""
+      document.getElementById('cameraEvidenceInput').value = ''
+      document.getElementById('fileEvidenceInput').value = ''
+      document.getElementById('evidencePreviewWrap').classList.remove('active')
+      document.getElementById('mappingResultCard').classList.remove('active')
+      document.getElementById('mappingResult').innerHTML = ''
+      document.getElementById('mappingStatus').textContent = ''
+      document.getElementById('mappingStatus').className = 'mapping-status'
+    }
+
+    function normalizeEvaluationPayload(payload){
+      if(Array.isArray(payload)) payload = payload[0] || {}
+      if(payload?.content?.parts?.length) payload = payload.content.parts.map(p=>p.text||'').join('')
+      if(typeof payload === 'string'){
+        const clean = payload.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```$/,'').trim()
+        try{return normalizeEvaluationPayload(JSON.parse(clean))}catch(_){return {status:'inconclusivo',confidence:0,justification:clean,observed_evidence:[],pending_items:[],recommendation_ai:''}}
+      }
+      return payload || {}
+    }
+
+    function renderEvaluationResult(result){
+      const q = MAPPING_QUESTIONS[document.getElementById('mappingQuestionSelect').value]
+      const status = result.status || 'inconclusivo'
+      const confidence = typeof result.confidence === 'number' ? result.confidence : 0
+      const confidencePct = confidence <= 1 ? Math.round(confidence * 100) : Math.round(confidence)
+      const approved = status === 'conforme'
+      const pointText = approved ? q.strong_point : (status === 'inconclusivo' ? result.recommendation_ai || 'Envie uma evidência mais clara para avaliação.' : q.weak_point)
+      const observed = Array.isArray(result.observed_evidence) ? result.observed_evidence : []
+      const pending = Array.isArray(result.pending_items) ? result.pending_items : []
+
+      document.getElementById('mappingResult').innerHTML = `
+        <div class="ai-result">
+          <div class="ai-status-row">
+            <span class="ai-badge ${escapeHtml(status)}">${escapeHtml(status.replaceAll('_',' '))}</span>
+            <span class="ai-badge">Confiança: ${confidencePct}%</span>
+          </div>
+          <div class="ai-section"><div class="ai-section-title">Justificativa</div><div>${escapeHtml(result.justification || 'Sem justificativa retornada.')}</div></div>
+          <div class="ai-section"><div class="ai-section-title">${approved ? 'Ponto forte' : (status === 'inconclusivo' ? 'Recomendação para nova evidência' : 'Ponto de melhoria')}</div><div class="ai-point ${approved ? 'strong' : (status === 'inconclusivo' ? '' : 'weak')}">${escapeHtml(pointText || '')}</div></div>
+          <div class="ai-section"><div class="ai-section-title">Evidências observadas</div>${observed.length ? `<ul class="ai-list">${observed.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>` : '<div class="mapping-status">Nenhuma evidência observada foi retornada.</div>'}</div>
+          <div class="ai-section"><div class="ai-section-title">Pendências</div>${pending.length ? `<ul class="ai-list">${pending.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>` : '<div class="mapping-status">Nenhuma pendência retornada.</div>'}</div>
+          <div class="ai-section"><div class="ai-section-title">Recomendação da I.A</div><div>${escapeHtml(result.recommendation_ai || '')}</div></div>
+        </div>`
+      document.getElementById('mappingResultCard').classList.add('active')
+    }
+
+    async function sendEvidenceEvaluation(){
+      const statusEl = document.getElementById('mappingStatus')
+      const questionId = document.getElementById('mappingQuestionSelect').value
+      if(!selectedEvidenceFile || !selectedEvidenceBase64){
+        statusEl.textContent = 'Selecione uma foto ou arquivo antes de avaliar.'
+        statusEl.className = 'mapping-status error'
+        return
+      }
+      statusEl.textContent = 'Enviando evidência para avaliação com I.A...'
+      statusEl.className = 'mapping-status'
+      try{
+        const controller = new AbortController()
+        const timeoutId = setTimeout(()=>controller.abort(), 90000)
+        const r = await fetch(WEBHOOK_AVALIACAO_URL,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            id_question:questionId,
+            image_base64:selectedEvidenceBase64,
+            file_name:selectedEvidenceFile.name || 'evidencia.jpg',
+            file_type:selectedEvidenceFile.type || 'image/jpeg'
+          }),
+          signal:controller.signal
+        })
+        clearTimeout(timeoutId)
+        const contentType = r.headers.get('content-type') || ''
+        const raw = contentType.includes('application/json') ? await r.json() : await r.text()
+        if(!r.ok) throw new Error(typeof raw === 'string' ? raw : JSON.stringify(raw))
+        const result = normalizeEvaluationPayload(raw)
+        renderEvaluationResult(result)
+        statusEl.textContent = 'Avaliação concluída.'
+        statusEl.className = 'mapping-status success'
+      }catch(e){
+        statusEl.textContent = e?.name === 'AbortError' ? 'A avaliação demorou mais do que o esperado. Tente novamente em alguns segundos.' : 'Não foi possível concluir a avaliação agora. Verifique o arquivo e tente novamente.'
+        statusEl.className = 'mapping-status error'
+      }
+    }
+
+
     function attachVoice(button,input){
       const SR=window.SpeechRecognition||window.webkitSpeechRecognition
       if(!SR){button.classList.add('hidden');return}
@@ -1487,8 +1753,20 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     document.getElementById('confirmClearBtn').addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);confirmModal.classList.remove('open');renderHistory()})
     attachVoice(document.getElementById('homeVoiceBtn'),homeQuestion)
     attachVoice(document.getElementById('chatVoiceBtn'),chatQuestion)
+
+    document.getElementById('mappingQuestionSelect')?.addEventListener('change', updateMappingQuestion)
+    document.getElementById('cameraEvidenceBtn')?.addEventListener('click',()=>document.getElementById('cameraEvidenceInput').click())
+    document.getElementById('fileEvidenceBtn')?.addEventListener('click',()=>document.getElementById('fileEvidenceInput').click())
+    document.getElementById('cameraEvidenceInput')?.addEventListener('change',e=>handleEvidenceFile(e.target.files?.[0]))
+    document.getElementById('fileEvidenceInput')?.addEventListener('change',e=>handleEvidenceFile(e.target.files?.[0]))
+    document.getElementById('sendEvidenceBtn')?.addEventListener('click',sendEvidenceEvaluation)
+    document.getElementById('clearEvidenceBtn')?.addEventListener('click',clearEvidence)
+    document.getElementById('backToLandingMappingBtn')?.addEventListener('click',backToLanding)
+    updateMappingQuestion()
+
     setSource('dados')
     home.style.display='none'
+    if(mapping) mapping.style.display='none'
     const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='flex'
     renderHistory()
   </script>
