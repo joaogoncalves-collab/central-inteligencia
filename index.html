@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.13</title>
+  <title>SDU V27.14</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -497,7 +497,7 @@ body.chat-open .footer{
 .central-grid{
   width:100%;
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:1fr 1fr;
   gap:18px;
   margin-top:8px;
 }
@@ -858,54 +858,39 @@ body.source-publicacoes .knowledge-hint{
 }
 
 
-/* V27.12 - Mapeamento com I.A */
-body.source-mapeamento .home,
-body.source-mapeamento .chat{display:none!important}
-.mapping{display:none;max-width:980px;width:100%;margin:0 auto;padding:54px 24px 48px;flex:1}
-.mapping.active{display:flex;flex-direction:column;gap:18px}
-.mapping-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;margin-bottom:10px}
-.mapping-title{font-size:26px;font-weight:600;margin:0}
-.mapping-subtitle{color:var(--muted);line-height:1.6;max-width:760px;margin:0;font-size:14px}
-.mapping-card{border:1px solid var(--border);background:#fff;border-radius:24px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
-.mapping-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.mapping-field{display:grid;gap:8px;margin-bottom:14px}
-.mapping-label{color:var(--muted);font-size:13px}
-.mapping-select,.mapping-input{width:100%;border:1px solid var(--border);border-radius:16px;padding:13px 14px;font-size:14px;background:#fff;outline:none}
-.mapping-select:focus,.mapping-input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(245,196,0,.16)}
-.question-box{display:grid;gap:10px;border:1px solid var(--border);border-radius:18px;padding:16px;background:#fafafa}
-.question-box strong{font-weight:600}.question-box p{margin:0;line-height:1.55}
-.evidence-actions{display:flex;gap:10px;flex-wrap:wrap}.file-input-hidden{display:none}
-.preview-wrap{display:none;gap:12px;align-items:flex-start;border:1px solid var(--border);background:#fff;border-radius:18px;padding:12px;margin-top:12px}
-.preview-wrap.active{display:flex}.preview-img{width:120px;height:90px;border-radius:14px;object-fit:cover;border:1px solid var(--border);background:#f3f4f6}
-.preview-meta{min-width:0;flex:1;color:#4b5563;font-size:13px;line-height:1.5}
-.mapping-result{display:none}.mapping-result.active{display:block}
-.ai-result{display:grid;gap:14px}.ai-status-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.ai-badge{display:inline-flex;align-items:center;border-radius:999px;padding:7px 12px;font-size:13px;border:1px solid var(--border);background:#fff}
-.ai-badge.conforme{background:#e6f4ea;border-color:#b7dfc2;color:#137333}.ai-badge.parcialmente_conforme{background:#fff8d1;border-color:#f5c400;color:#6b4e00}.ai-badge.nao_conforme{background:#fce8e6;border-color:#f2c7c3;color:#b3261e}.ai-badge.inconclusivo{background:#f3f4f6;border-color:#d1d5db;color:#374151}
-.ai-section{border-top:1px solid var(--border);padding-top:12px}.ai-section-title{color:var(--muted);font-size:13px;margin-bottom:6px}
-.ai-list{margin:0;padding-left:18px;line-height:1.55}.ai-point{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff;line-height:1.55}.ai-point.strong{background:#e6f4ea;border-color:#b7dfc2}.ai-point.weak{background:#fce8e6;border-color:#f2c7c3}
-.mapping-status{min-height:20px;color:var(--muted);font-size:14px}.mapping-status.error{color:var(--red)}.mapping-status.success{color:var(--green)}
-body.source-mapeamento .landing{display:none!important}
-@media(max-width:760px){.mapping{padding:28px 14px calc(24px + env(safe-area-inset-bottom))}.mapping-title{font-size:22px}.mapping-grid{grid-template-columns:1fr}.mapping-card{border-radius:20px;padding:18px}.evidence-actions{display:grid;grid-template-columns:1fr}.evidence-actions .btn{width:100%}.preview-wrap{flex-direction:column}.preview-img{width:100%;height:190px}}
-
-
-/* V27.13 - UX aprimorada do Mapeamento com I.A */
-.mapping-card.processing{border-color:rgba(245,196,0,.65);box-shadow:0 12px 34px rgba(245,196,0,.18)}
-.mapping-loader-card{border:1px solid rgba(245,196,0,.75);background:linear-gradient(135deg,#fffdf0,#ffffff);border-radius:22px;padding:22px;display:grid;gap:16px;box-shadow:0 10px 28px rgba(0,0,0,.06)}
-.mapping-loader-top{display:flex;align-items:center;gap:14px}
-.mapping-spinner{width:42px;height:42px;border-radius:999px;border:4px solid #fff1a8;border-top-color:var(--yellow);animation:mappingSpin .9s linear infinite;flex:0 0 auto}
-@keyframes mappingSpin{to{transform:rotate(360deg)}}
-.mapping-loader-title{font-size:17px;font-weight:600;color:#111}
-.mapping-loader-subtitle{font-size:13px;line-height:1.55;color:#6b7280;margin-top:3px}
-.mapping-loader-steps{display:grid;gap:9px;margin-top:2px}
-.mapping-loader-step{display:flex;align-items:center;gap:9px;color:#4b5563;font-size:13px}
-.mapping-loader-dot{width:8px;height:8px;border-radius:999px;background:var(--yellow);box-shadow:0 0 0 4px rgba(245,196,0,.16)}
-.mapping-status.info-box{border:1px solid var(--border);background:#fff;padding:12px 14px;line-height:1.5;border-radius:14px}
-#sendEvidenceBtn[disabled],#clearEvidenceBtn[disabled]{opacity:.62;cursor:not-allowed;transform:none!important}
-.ai-status-row{border-bottom:1px solid var(--border);padding-bottom:14px}
-.ai-section + .ai-section{border-top:1px solid var(--border);padding-top:14px}
-.ai-section-title{font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-@media(max-width:760px){.mapping-loader-card{padding:18px;border-radius:20px}.mapping-loader-top{align-items:flex-start}.mapping-spinner{width:36px;height:36px;border-width:3px}.mapping-loader-title{font-size:16px}}
+/* V27.14 - Gerador de Conteúdo */
+body.source-builder .home,
+body.source-builder .chat,
+body.source-builder .mapping{display:none!important}
+.builder{display:none;max-width:1180px;width:100%;margin:0 auto;padding:44px 24px 48px;flex:1}
+.builder.active{display:flex;flex-direction:column;gap:18px}
+.builder-header{text-align:center;display:grid;gap:8px;margin-bottom:8px}
+.builder-title{font-size:28px;font-weight:600;margin:0}
+.builder-subtitle{font-size:14px;color:var(--muted);line-height:1.6;margin:0 auto;max-width:820px}
+.builder-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}
+.builder-card{border:1px solid var(--border);background:#fff;border-radius:24px;padding:20px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.builder-card-title{font-size:17px;font-weight:600;margin-bottom:12px}
+.builder-toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:12px}
+.builder-search{flex:1;min-width:240px;border:1px solid var(--border);border-radius:999px;padding:11px 14px;font-size:14px;outline:none}
+.builder-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px;max-height:520px}
+.builder-table{width:100%;border-collapse:collapse;font-size:13px}
+.builder-table th,.builder-table td{border-bottom:1px solid var(--border);padding:10px;text-align:left;vertical-align:top}
+.builder-table th{background:#fafafa;color:#4b5563;font-weight:600;position:sticky;top:0;z-index:2}
+.builder-table tr{cursor:pointer}.builder-table tr:hover{background:#fff8d1}
+.builder-form{display:grid;gap:12px}.builder-field{display:grid;gap:6px}.builder-label{font-size:12px;color:var(--muted)}
+.builder-input,.builder-select,.builder-textarea{width:100%;border:1px solid var(--border);border-radius:14px;padding:11px 12px;font-size:14px;outline:none;background:#fff}
+.builder-textarea{min-height:76px;resize:vertical}
+.builder-input:focus,.builder-select:focus,.builder-textarea:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(245,196,0,.15)}
+.builder-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.builder-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.builder-status{min-height:20px;font-size:13px;color:var(--muted);line-height:1.5}
+.builder-status.success{color:var(--green)}.builder-status.error{color:var(--red)}
+.builder-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:center;justify-content:center;z-index:2200;padding:20px}
+.builder-modal-backdrop.open{display:flex}.builder-modal{width:min(520px,100%);background:#fff;border-radius:24px;padding:22px;box-shadow:var(--shadow);display:grid;gap:14px}
+.builder-modal-title{font-size:18px;font-weight:600}.builder-modal-text{font-size:14px;color:#4b5563;line-height:1.6}
+.builder-danger{border-color:#f2c7c3!important;color:var(--red)!important}.builder-mini{font-size:12px;color:var(--muted);line-height:1.5}
+@media(max-width:980px){.builder-grid{grid-template-columns:1fr}.central-grid{grid-template-columns:1fr!important}}
+@media(max-width:760px){.builder{padding:28px 14px calc(24px + env(safe-area-inset-bottom))}.builder-title{font-size:22px}.builder-card{border-radius:20px;padding:16px}.builder-row{grid-template-columns:1fr}.builder-actions{display:grid;grid-template-columns:1fr}.builder-actions .btn{width:100%}}
 
 </style>
 </head>
@@ -952,77 +937,103 @@ body.source-mapeamento .landing{display:none!important}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </button>
-
-      <button class="central-box" id="openMapeamentoBtn" data-open="mapeamento" type="button">
+      <button class="central-box" id="openBuilderBtn" data-open="builder" type="button">
         <div class="central-icon">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 7h4l2-2h4l2 2h4v12H4V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M5 4h14v16H5V4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </div>
-        <div class="central-box-title">Mapeamento com I.A</div>
-        <div class="central-box-desc">Envie uma foto ou arquivo como evidência e receba uma avaliação automática com base nas regras do checklist.</div>
-        <div class="central-box-footer">Entrar em Mapeamento
+        <div class="central-box-title">Gerador de Conteúdo</div>
+        <div class="central-box-desc">Crie, edite, desative e publique questões diretamente no BigQuery sem mexer na planilha.</div>
+        <div class="central-box-footer">Entrar no Gerador
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </button>
     </div>
   </main>
 
-  <main class="mapping" id="mapping">
-    <button class="pill-btn back-to-landing" id="backToLandingMappingBtn" type="button">← Voltar aos ambientes</button>
-    <div class="mapping-header">
+
+
+  <main class="builder" id="builder">
+    <button class="pill-btn back-to-landing" id="backToLandingBuilderBtn" type="button">← Voltar aos ambientes</button>
+    <div class="builder-header">
       <img class="logo" src="solidaridad-logo.png" alt="Solidaridad" />
-      <h1 class="mapping-title">Mapeamento com I.A</h1>
-      <p class="mapping-subtitle">Selecione uma questão, envie uma evidência por foto ou arquivo e receba uma avaliação técnica com base na resposta esperada.</p>
+      <h1 class="builder-title">Gerador de Conteúdo</h1>
+      <p class="builder-subtitle">Crie e edite questões em modo rascunho. Quando estiver pronto, use Salvar e Aplicar para publicar no questionário operacional.</p>
     </div>
 
-    <div class="mapping-grid">
-      <section class="mapping-card">
-        <div class="mapping-field">
-          <label class="mapping-label" for="mappingQuestionSelect">Questão</label>
-          <select class="mapping-select" id="mappingQuestionSelect">
-            <option value="Q1971_laranja_cocacola" selected>Q1971 - Tanques ou tambores de armazenamento</option>
-          </select>
+    <div class="builder-grid">
+      <section class="builder-card">
+        <div class="builder-toolbar">
+          <input class="builder-search" id="builderSearch" placeholder="Buscar por ID, pergunta, tema ou classe..." />
+          <button class="btn primary" id="builderNewBtn" type="button">Criar questão</button>
+          <button class="btn" id="builderReloadBtn" type="button">Atualizar lista</button>
         </div>
-
-        <div class="question-box" id="mappingQuestionBox">
-          <p><strong>Questão:</strong> Como são os tanques ou tambores de armazenamento de combustíveis e lubrificantes?</p>
-          <p><strong>Recomendação:</strong> Os tanques ou tambores de armazenamento devem ser suspensos ou com estruturas para conter vazamento.</p>
+        <div class="builder-table-wrap">
+          <table class="builder-table">
+            <thead><tr><th>QID</th><th>Pergunta</th><th>Tema</th><th>Classe</th></tr></thead>
+            <tbody id="builderTableBody"><tr><td colspan="4">Carregando...</td></tr></tbody>
+          </table>
         </div>
-
-        <div class="mapping-field" style="margin-top:16px">
-          <label class="mapping-label">Evidência</label>
-          <div class="evidence-actions">
-            <button class="btn primary" id="cameraEvidenceBtn" type="button">Tirar foto</button>
-            <button class="btn" id="fileEvidenceBtn" type="button">Escolher arquivo</button>
-          </div>
-          <input class="file-input-hidden" id="cameraEvidenceInput" type="file" accept="image/*" capture="environment" />
-          <input class="file-input-hidden" id="fileEvidenceInput" type="file" accept="image/*,.pdf" />
-        </div>
-
-        <div class="preview-wrap" id="evidencePreviewWrap">
-          <img class="preview-img" id="evidencePreviewImg" alt="Prévia da evidência" />
-          <div class="preview-meta">
-            <div id="evidenceFileName">Nenhum arquivo selecionado</div>
-            <div id="evidenceFileType"></div>
-            <div id="evidenceFileSize"></div>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" id="sendEvidenceBtn" type="button">Avaliar evidência</button>
-          <button class="btn" id="clearEvidenceBtn" type="button">Limpar</button>
-        </div>
-        <div class="mapping-status" id="mappingStatus"></div>
       </section>
 
-      <section class="mapping-card mapping-result" id="mappingResultCard">
-        <div id="mappingResult"></div>
+      <section class="builder-card">
+        <div class="builder-card-title">Criar ou editar questão</div>
+        <form class="builder-form" id="builderForm">
+          <div class="builder-row">
+            <div class="builder-field"><label class="builder-label">Q ID</label><input class="builder-input" id="b_id_question" placeholder="Ex: Q9999_laranja_cocacola" /></div>
+            <div class="builder-field"><label class="builder-label">ID Toolkit</label><input class="builder-input" id="b_id_toolkit" value="laranja_cocacola" /></div>
+          </div>
+          <div class="builder-row">
+            <div class="builder-field"><label class="builder-label">Pillar Name</label><input class="builder-input" id="b_pillar_name" placeholder="Ex: Ambiental" /></div>
+            <div class="builder-field"><label class="builder-label">Topic Name</label><input class="builder-input" id="b_topic_txt" placeholder="Ex: Armazenamento" /></div>
+          </div>
+          <div class="builder-field"><label class="builder-label">Question Text</label><textarea class="builder-textarea" id="b_question_txt" placeholder="Digite a pergunta..."></textarea></div>
+          <div class="builder-row">
+            <div class="builder-field"><label class="builder-label">Question Type</label><select class="builder-select" id="b_type_question"><option value="adherence">Adherence</option><option value="number">Number</option><option value="unique">Unique</option><option value="multiple">Multiple</option><option value="text">Text</option><option value="date">Data</option></select></div>
+            <div class="builder-field"><label class="builder-label">Question Class</label><select class="builder-select" id="b_question_class"><option value="classgreen">classgreen</option><option value="classyellow">classyellow</option><option value="classorange">classorange</option><option value="classred">classred</option></select></div>
+          </div>
+          <div class="builder-field"><label class="builder-label">Possible Responses</label><textarea class="builder-textarea" id="b_possible_responses" placeholder="Uma resposta por linha. Ex: Sim&#10;Não"></textarea><div class="builder-mini">Na próxima etapa vamos transformar isso em componente com botão + por tipo de pergunta.</div></div>
+          <div class="builder-field"><label class="builder-label">Expected Answer</label><input class="builder-input" id="b_expected_answer" placeholder="Ex: Q9999='Sim'" /></div>
+          <div class="builder-field"><label class="builder-label">Associated Task</label><textarea class="builder-textarea" id="b_associated_task" placeholder="Tarefa sugerida em caso de não conformidade"></textarea></div>
+          <div class="builder-field"><label class="builder-label">Recommendation</label><textarea class="builder-textarea" id="b_recommendation" placeholder="Recomendação técnica"></textarea></div>
+          <div class="builder-row">
+            <div class="builder-field"><label class="builder-label">Strong Point</label><textarea class="builder-textarea" id="b_strong_point" placeholder="Ponto forte"></textarea></div>
+            <div class="builder-field"><label class="builder-label">Weak Point</label><textarea class="builder-textarea" id="b_weak_point" placeholder="Ponto de melhoria"></textarea></div>
+          </div>
+          <div class="builder-field"><label class="builder-label">Tooltip</label><textarea class="builder-textarea" id="b_tooltip" placeholder="Dica ou orientação para a pergunta"></textarea></div>
+          <div class="builder-row">
+            <div class="builder-field"><label class="builder-label">Taxonomy</label><input class="builder-input" id="b_taxonomy" /></div>
+            <div class="builder-field"><label class="builder-label">Certification Standard</label><input class="builder-input" id="b_certification_standard" /></div>
+          </div>
+          <div class="builder-row">
+            <div class="builder-field"><label class="builder-label">Unit</label><input class="builder-input" id="b_unit" /></div>
+            <div class="builder-field"><label class="builder-label">Unit Position</label><input class="builder-input" id="b_unit_position" /></div>
+          </div>
+          <div class="builder-actions">
+            <button class="btn primary" id="builderSaveBtn" type="submit">Salvar questão</button>
+            <button class="btn" id="builderDeleteBtn" type="button">Desativar</button>
+            <button class="btn yellow" id="builderPublishBtn" type="button">Salvar e Aplicar</button>
+            <button class="btn" id="builderClearBtn" type="button">Limpar</button>
+          </div>
+          <div class="builder-status" id="builderStatus"></div>
+        </form>
       </section>
     </div>
   </main>
 
+  <div class="builder-modal-backdrop" id="builderConfirmModal">
+    <div class="builder-modal">
+      <div class="builder-modal-title">Confirmar alteração</div>
+      <div class="builder-modal-text">Esse QID já existe. Para sobrescrever a pergunta, digite CONFIRMAR ALTERAÇÃO no campo abaixo.</div>
+      <input class="builder-input" id="builderConfirmInput" placeholder="CONFIRMAR ALTERAÇÃO" />
+      <div class="builder-actions">
+        <button class="btn builder-danger" id="builderConfirmOverwriteBtn" type="button">Confirmar alteração</button>
+        <button class="btn" id="builderCancelOverwriteBtn" type="button">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <main class="home" id="home">
     <button class="pill-btn back-to-landing" id="backToLandingBtn" type="button">← Voltar aos ambientes</button>
@@ -1112,19 +1123,18 @@ body.source-mapeamento .landing{display:none!important}
   <script>
     const WEBHOOK_DADOS_URL='https://joaogoncalves.app.n8n.cloud/webhook/pergunta'
     const WEBHOOK_PUBLICACOES_URL='https://joaogoncalves.app.n8n.cloud/webhook/publicacoes'
-    const WEBHOOK_AVALIACAO_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia'
+    const WEBHOOK_BUILDER_URL='https://joaogoncalves.app.n8n.cloud/webhook/gerador-conteudo'
     const HISTORY_KEY='central_inteligente_conversas_v10'
-    const home=document.getElementById('home'),chat=document.getElementById('chat'),mapping=document.getElementById('mapping'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
+    const home=document.getElementById('home'),chat=document.getElementById('chat'),builder=document.getElementById('builder'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
     let mode='resposta',sourceConsulta='dados',currentConversation=null
 
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
 
     function setSource(source){
-      sourceConsulta = source === 'publicacoes' ? 'publicacoes' : (source === 'mapeamento' ? 'mapeamento' : 'dados')
+      sourceConsulta = source === 'publicacoes' ? 'publicacoes' : 'dados'
       if(sourceConsulta === 'publicacoes') mode = 'resposta'
       document.body.classList.toggle('source-publicacoes', sourceConsulta === 'publicacoes')
       document.body.classList.toggle('source-dados', sourceConsulta === 'dados')
-      document.body.classList.toggle('source-mapeamento', sourceConsulta === 'mapeamento')
 
       const placeholder = sourceConsulta === 'publicacoes'
         ? 'Pergunte sobre publicações, artigos ou temas institucionais'
@@ -1152,21 +1162,10 @@ body.source-mapeamento .landing{display:none!important}
       setSource(source)
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='none'
-      chat.classList.remove('active')
-      document.body.classList.remove('chat-open')
-
-      if(sourceConsulta === 'mapeamento'){
-        home.classList.remove('active')
-        home.style.display='none'
-        mapping.classList.add('active')
-        mapping.style.display='flex'
-        return
-      }
-
-      mapping.classList.remove('active')
-      mapping.style.display='none'
       home.classList.add('active')
       home.style.display='flex'
+      chat.classList.remove('active')
+      document.body.classList.remove('chat-open')
       homeQuestion.value=''
       setTimeout(()=>homeQuestion.focus(),50)
     }
@@ -1178,8 +1177,6 @@ body.source-mapeamento .landing{display:none!important}
       document.body.classList.remove('chat-open')
       home.classList.remove('active')
       home.style.display='none'
-      mapping.classList.remove('active')
-      mapping.style.display='none'
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='flex'
     }
@@ -1559,196 +1556,145 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       }
     }
 
-    const MAPPING_QUESTIONS = {
-      "Q1971_laranja_cocacola": {
-        id_question:"Q1971_laranja_cocacola",
-        title:"Q1971 - Tanques ou tambores de armazenamento",
-        question_txt:"Como são os tanques ou tambores de armazenamento de combustíveis e lubrificantes?",
-        recommendation:"Os tanques ou tambores de armazenamento devem ser suspensos ou com estruturas para conter vazamento.",
-        strong_point:"Tanques ou tambores de combustíveis/lubrificantes armazenados de forma suspensa ou com estrutura de contenção para vazamentos.",
-        weak_point:"Tanques ou tambores de combustíveis/lubrificantes sem evidência suficiente de suspensão ou contenção para vazamentos."
+    let builderQuestions = []
+    let pendingBuilderQuestion = null
+
+    async function builderApi(payload){
+      const r = await fetch(WEBHOOK_BUILDER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      const contentType = r.headers.get('content-type') || ''
+      const data = contentType.includes('application/json') ? await r.json() : await r.text()
+      if(!r.ok) throw new Error(typeof data === 'string' ? data : JSON.stringify(data))
+      return data
+    }
+
+    function getBuilderQuestionPayload(){
+      return {
+        id_question:document.getElementById('b_id_question').value.trim(),
+        id_toolkit:document.getElementById('b_id_toolkit').value.trim(),
+        toolkit_name:'Laranja Coca Cola',
+        pillar_name:document.getElementById('b_pillar_name').value.trim(),
+        topic_txt:document.getElementById('b_topic_txt').value.trim(),
+        question_txt:document.getElementById('b_question_txt').value.trim(),
+        type_question:document.getElementById('b_type_question').value,
+        question_class:document.getElementById('b_question_class').value,
+        possible_responses:document.getElementById('b_possible_responses').value.trim(),
+        expected_answer:document.getElementById('b_expected_answer').value.trim(),
+        associated_task:document.getElementById('b_associated_task').value.trim(),
+        recommendation:document.getElementById('b_recommendation').value.trim(),
+        strong_point:document.getElementById('b_strong_point').value.trim(),
+        weak_point:document.getElementById('b_weak_point').value.trim(),
+        tooltip:document.getElementById('b_tooltip').value.trim(),
+        taxonomy:document.getElementById('b_taxonomy').value.trim(),
+        certification_standard:document.getElementById('b_certification_standard').value.trim(),
+        unit:document.getElementById('b_unit').value.trim(),
+        unit_position:document.getElementById('b_unit_position').value.trim()
       }
     }
 
-    let selectedEvidenceFile = null
-    let selectedEvidenceBase64 = ""
-
-    function formatBytes(bytes){
-      if(!bytes && bytes !== 0) return ''
-      if(bytes < 1024) return bytes + ' B'
-      if(bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-      return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+    function setBuilderStatus(text,type=''){
+      const el=document.getElementById('builderStatus')
+      if(!el)return
+      el.textContent=text
+      el.className='builder-status '+type
     }
 
-    function updateMappingQuestion(){
-      const select = document.getElementById('mappingQuestionSelect')
-      const box = document.getElementById('mappingQuestionBox')
-      const q = MAPPING_QUESTIONS[select.value]
-      if(!q || !box) return
-      box.innerHTML = `
-        <p><strong>Questão:</strong> ${escapeHtml(q.question_txt)}</p>
-        <p><strong>Recomendação:</strong> ${escapeHtml(q.recommendation)}</p>
-      `
+    function fillBuilderForm(q={}){
+      const set=(id,val)=>{const el=document.getElementById(id); if(el) el.value=val||''}
+      set('b_id_question',q.id_question)
+      set('b_id_toolkit',q.id_toolkit||'laranja_cocacola')
+      set('b_pillar_name',q.pillar_name||q.pillar_txt||q.pillar_namep)
+      set('b_topic_txt',q.topic_txt||q.topic_name)
+      set('b_question_txt',q.question_txt||q.question_text)
+      set('b_type_question',q.type_question||q.question_type||'adherence')
+      set('b_question_class',q.question_class||'classgreen')
+      set('b_possible_responses',q.possible_responses)
+      set('b_expected_answer',q.expected_answer)
+      set('b_associated_task',q.associated_task)
+      set('b_recommendation',q.recommendation)
+      set('b_strong_point',q.strong_point)
+      set('b_weak_point',q.weak_point)
+      set('b_tooltip',q.tooltip)
+      set('b_taxonomy',q.taxonomy)
+      set('b_certification_standard',q.certification_standard)
+      set('b_unit',q.unit)
+      set('b_unit_position',q.unit_position)
     }
 
-    function fileToBase64(file){
-      return new Promise((resolve,reject)=>{
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '')
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+    function clearBuilderForm(){fillBuilderForm({id_toolkit:'laranja_cocacola',type_question:'adherence',question_class:'classgreen'});pendingBuilderQuestion=null;setBuilderStatus('')}
+
+    function renderBuilderTable(){
+      const body=document.getElementById('builderTableBody')
+      if(!body)return
+      const search=(document.getElementById('builderSearch')?.value||'').toLowerCase()
+      const rows=builderQuestions.filter(q=>[q.id_question,q.question_txt,q.topic_txt,q.question_class].join(' ').toLowerCase().includes(search)).slice(0,500)
+      if(!rows.length){body.innerHTML='<tr><td colspan="4">Nenhuma questão encontrada.</td></tr>';return}
+      body.innerHTML=rows.map(q=>`<tr data-id="${escapeHtml(q.id_question||'')}"><td>${escapeHtml(q.id_question||'')}</td><td>${escapeHtml(q.question_txt||'')}</td><td>${escapeHtml(q.topic_txt||'')}</td><td>${escapeHtml(q.question_class||'')}</td></tr>`).join('')
+      body.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>loadBuilderQuestion(tr.dataset.id)))
     }
 
-    async function handleEvidenceFile(file){
-      if(!file) return
-      selectedEvidenceFile = file
-      selectedEvidenceBase64 = await fileToBase64(file)
-
-      const wrap = document.getElementById('evidencePreviewWrap')
-      const img = document.getElementById('evidencePreviewImg')
-      document.getElementById('evidenceFileName').textContent = file.name || 'evidência'
-      document.getElementById('evidenceFileType').textContent = file.type || 'tipo não identificado'
-      document.getElementById('evidenceFileSize').textContent = formatBytes(file.size)
-
-      if(file.type && file.type.startsWith('image/')){
-        img.src = URL.createObjectURL(file)
-        img.style.display = 'block'
-      }else{
-        img.removeAttribute('src')
-        img.style.display = 'none'
-      }
-
-      wrap.classList.add('active')
-      document.getElementById('mappingStatus').textContent = 'Evidência carregada. Você já pode iniciar a avaliação.'
-      document.getElementById('mappingStatus').className = 'mapping-status success'
-    }
-
-    function clearEvidence(){
-      selectedEvidenceFile = null
-      selectedEvidenceBase64 = ""
-      document.getElementById('cameraEvidenceInput').value = ''
-      document.getElementById('fileEvidenceInput').value = ''
-      document.getElementById('evidencePreviewWrap').classList.remove('active')
-      document.getElementById('mappingResultCard').classList.remove('active')
-      document.getElementById('mappingResult').innerHTML = ''
-      document.getElementById('mappingStatus').textContent = ''
-      document.getElementById('mappingStatus').className = 'mapping-status'
-      document.querySelector('.mapping-card')?.classList.remove('processing')
-    }
-
-    function normalizeEvaluationPayload(payload){
-      if(Array.isArray(payload)) payload = payload[0] || {}
-      if(payload?.content?.parts?.length) payload = payload.content.parts.map(p=>p.text||'').join('')
-      if(typeof payload === 'string'){
-        const clean = payload.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```$/,'').trim()
-        try{return normalizeEvaluationPayload(JSON.parse(clean))}catch(_){return {status:'inconclusivo',confidence:0,justification:clean,observed_evidence:[],pending_items:[],recommendation_ai:''}}
-      }
-      return payload || {}
-    }
-
-    function renderEvaluationResult(result){
-      const q = MAPPING_QUESTIONS[document.getElementById('mappingQuestionSelect').value]
-      const status = result.status || 'inconclusivo'
-      const confidence = typeof result.confidence === 'number' ? result.confidence : 0
-      const confidencePct = confidence <= 1 ? Math.round(confidence * 100) : Math.round(confidence)
-      const approved = status === 'conforme'
-      const pointText = approved ? q.strong_point : (status === 'inconclusivo' ? result.recommendation_ai || 'Envie uma evidência mais clara para avaliação.' : q.weak_point)
-      const observed = Array.isArray(result.observed_evidence) ? result.observed_evidence : []
-      const pending = Array.isArray(result.pending_items) ? result.pending_items : []
-
-      document.getElementById('mappingResult').innerHTML = `
-        <div class="ai-result">
-          <div class="ai-status-row">
-            <span class="ai-badge ${escapeHtml(status)}">${escapeHtml(status.replaceAll('_',' '))}</span>
-            <span class="ai-badge">Confiança: ${confidencePct}%</span>
-          </div>
-          <div class="ai-section"><div class="ai-section-title">Justificativa</div><div>${escapeHtml(result.justification || 'Sem justificativa retornada.')}</div></div>
-          <div class="ai-section"><div class="ai-section-title">${approved ? 'Ponto forte' : (status === 'inconclusivo' ? 'Recomendação para nova evidência' : 'Ponto de melhoria')}</div><div class="ai-point ${approved ? 'strong' : (status === 'inconclusivo' ? '' : 'weak')}">${escapeHtml(pointText || '')}</div></div>
-          <div class="ai-section"><div class="ai-section-title">Evidências observadas</div>${observed.length ? `<ul class="ai-list">${observed.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>` : '<div class="mapping-status">Nenhuma evidência observada foi retornada.</div>'}</div>
-          <div class="ai-section"><div class="ai-section-title">Pendências</div>${pending.length ? `<ul class="ai-list">${pending.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>` : '<div class="mapping-status">Nenhuma pendência retornada.</div>'}</div>
-          <div class="ai-section"><div class="ai-section-title">Recomendação da I.A</div><div>${escapeHtml(result.recommendation_ai || '')}</div></div>
-        </div>`
-      document.getElementById('mappingResultCard').classList.add('active')
-    }
-
-
-    function setMappingProcessing(isProcessing){
-      const card = document.querySelector('.mapping-card')
-      const sendBtn = document.getElementById('sendEvidenceBtn')
-      const clearBtn = document.getElementById('clearEvidenceBtn')
-      const statusEl = document.getElementById('mappingStatus')
-      const resultCard = document.getElementById('mappingResultCard')
-      const result = document.getElementById('mappingResult')
-
-      if(card) card.classList.toggle('processing', Boolean(isProcessing))
-      if(sendBtn) sendBtn.disabled = Boolean(isProcessing)
-      if(clearBtn) clearBtn.disabled = Boolean(isProcessing)
-
-      if(isProcessing){
-        if(statusEl){
-          statusEl.textContent = 'Análise em andamento. Aguarde enquanto a I.A interpreta a evidência.'
-          statusEl.className = 'mapping-status info-box'
-        }
-        if(resultCard) resultCard.classList.add('active')
-        if(result){
-          result.innerHTML = `
-            <div class="mapping-loader-card">
-              <div class="mapping-loader-top">
-                <div class="mapping-spinner" aria-hidden="true"></div>
-                <div>
-                  <div class="mapping-loader-title">Avaliando evidência com I.A</div>
-                  <div class="mapping-loader-subtitle">Estamos cruzando a imagem enviada com a questão, a recomendação técnica e a resposta esperada.</div>
-                </div>
-              </div>
-              <div class="mapping-loader-steps">
-                <div class="mapping-loader-step"><span class="mapping-loader-dot"></span> Lendo a evidência visual</div>
-                <div class="mapping-loader-step"><span class="mapping-loader-dot"></span> Comparando com o critério técnico</div>
-                <div class="mapping-loader-step"><span class="mapping-loader-dot"></span> Gerando justificativa, pendências e recomendação</div>
-              </div>
-            </div>
-          `
-        }
-      }
-    }
-
-    async function sendEvidenceEvaluation(){
-      const statusEl = document.getElementById('mappingStatus')
-      const questionId = document.getElementById('mappingQuestionSelect').value
-      if(!selectedEvidenceFile || !selectedEvidenceBase64){
-        statusEl.textContent = 'Selecione uma foto ou arquivo antes de avaliar.'
-        statusEl.className = 'mapping-status error'
-        return
-      }
-      setMappingProcessing(true)
+    async function loadBuilderQuestions(){
+      const body=document.getElementById('builderTableBody')
+      if(body)body.innerHTML='<tr><td colspan="4">Carregando...</td></tr>'
       try{
-        const controller = new AbortController()
-        const timeoutId = setTimeout(()=>controller.abort(), 90000)
-        const r = await fetch(WEBHOOK_AVALIACAO_URL,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            id_question:questionId,
-            image_base64:selectedEvidenceBase64,
-            file_name:selectedEvidenceFile.name || 'evidencia.jpg',
-            file_type:selectedEvidenceFile.type || 'image/jpeg'
-          }),
-          signal:controller.signal
-        })
-        clearTimeout(timeoutId)
-        const contentType = r.headers.get('content-type') || ''
-        const raw = contentType.includes('application/json') ? await r.json() : await r.text()
-        if(!r.ok) throw new Error(typeof raw === 'string' ? raw : JSON.stringify(raw))
-        const result = normalizeEvaluationPayload(raw)
-        renderEvaluationResult(result)
-        setMappingProcessing(false)
-        statusEl.textContent = 'Avaliação concluída.'
-        statusEl.className = 'mapping-status success'
-      }catch(e){
-        setMappingProcessing(false)
-        statusEl.textContent = e?.name === 'AbortError' ? 'A avaliação demorou mais do que o esperado. Tente novamente em alguns segundos.' : 'Não foi possível concluir a avaliação agora. Verifique o arquivo e tente novamente.'
-        statusEl.className = 'mapping-status error'
-      }
+        const data=await builderApi({action:'list_questions'})
+        builderQuestions=Array.isArray(data)?data:[]
+        renderBuilderTable()
+        setBuilderStatus('Lista carregada.','success')
+      }catch(e){if(body)body.innerHTML='<tr><td colspan="4">Erro ao carregar questões.</td></tr>';setBuilderStatus('Erro ao carregar questões.','error')}
+    }
+
+    async function loadBuilderQuestion(id){
+      if(!id)return
+      setBuilderStatus('Carregando pergunta...')
+      try{
+        const data=await builderApi({action:'get_question',id_question:id})
+        const q=Array.isArray(data)?data[0]:data
+        fillBuilderForm(q||{})
+        setBuilderStatus('Pergunta carregada para edição.','success')
+      }catch(e){setBuilderStatus('Erro ao carregar pergunta.','error')}
+    }
+
+    async function saveBuilderQuestion(confirmUpdate=false){
+      const question=getBuilderQuestionPayload()
+      if(!question.id_question||!question.question_txt){setBuilderStatus('Preencha pelo menos Q ID e Question Text.','error');return}
+      setBuilderStatus('Salvando pergunta...')
+      try{
+        const data=await builderApi({action:'save_question',confirm_update:confirmUpdate,question})
+        const normalized=Array.isArray(data)?data[0]:data
+        if(normalized?.status==='conflict'){
+          pendingBuilderQuestion=question
+          document.getElementById('builderConfirmInput').value=''
+          document.getElementById('builderConfirmModal').classList.add('open')
+          setBuilderStatus('QID já existe. Confirme se deseja sobrescrever.','error')
+          return
+        }
+        setBuilderStatus(normalized?.message||'Pergunta salva com sucesso.','success')
+        await loadBuilderQuestions()
+      }catch(e){setBuilderStatus('Erro ao salvar pergunta.','error')}
+    }
+
+    async function deleteBuilderQuestion(){
+      const id=document.getElementById('b_id_question').value.trim()
+      if(!id){setBuilderStatus('Selecione uma pergunta para desativar.','error');return}
+      if(!confirm('Desativar esta pergunta do rascunho?'))return
+      setBuilderStatus('Desativando pergunta...')
+      try{
+        const data=await builderApi({action:'delete_question',id_question:id})
+        const normalized=Array.isArray(data)?data[0]:data
+        setBuilderStatus(normalized?.message||'Pergunta desativada.','success')
+        clearBuilderForm()
+        await loadBuilderQuestions()
+      }catch(e){setBuilderStatus('Erro ao desativar pergunta.','error')}
+    }
+
+    async function publishBuilderQuestions(){
+      if(!confirm('Publicar o conteúdo atual para a tabela oficial?'))return
+      setBuilderStatus('Publicando conteúdo...')
+      try{
+        const data=await builderApi({action:'publish_questions'})
+        const normalized=Array.isArray(data)?data[0]:data
+        setBuilderStatus(normalized?.message||'Conteúdo publicado com sucesso.','success')
+      }catch(e){setBuilderStatus('Erro ao publicar conteúdo.','error')}
     }
 
 
@@ -1814,20 +1760,8 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     document.getElementById('confirmClearBtn').addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);confirmModal.classList.remove('open');renderHistory()})
     attachVoice(document.getElementById('homeVoiceBtn'),homeQuestion)
     attachVoice(document.getElementById('chatVoiceBtn'),chatQuestion)
-
-    document.getElementById('mappingQuestionSelect')?.addEventListener('change', updateMappingQuestion)
-    document.getElementById('cameraEvidenceBtn')?.addEventListener('click',()=>document.getElementById('cameraEvidenceInput').click())
-    document.getElementById('fileEvidenceBtn')?.addEventListener('click',()=>document.getElementById('fileEvidenceInput').click())
-    document.getElementById('cameraEvidenceInput')?.addEventListener('change',e=>handleEvidenceFile(e.target.files?.[0]))
-    document.getElementById('fileEvidenceInput')?.addEventListener('change',e=>handleEvidenceFile(e.target.files?.[0]))
-    document.getElementById('sendEvidenceBtn')?.addEventListener('click',sendEvidenceEvaluation)
-    document.getElementById('clearEvidenceBtn')?.addEventListener('click',clearEvidence)
-    document.getElementById('backToLandingMappingBtn')?.addEventListener('click',backToLanding)
-    updateMappingQuestion()
-
     setSource('dados')
     home.style.display='none'
-    if(mapping) mapping.style.display='none'
     const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='flex'
     renderHistory()
   </script>
