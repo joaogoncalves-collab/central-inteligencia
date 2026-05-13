@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.15</title>
+  <title>SDU V27.16</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -858,10 +858,8 @@ body.source-publicacoes .knowledge-hint{
 }
 
 
-/* V27.14 - Gerador de Conteúdo */
-body.source-builder .home,
-body.source-builder .chat,
-body.source-builder .mapping{display:none!important}
+/* V27.16 - Gerador de Conteúdo estável */
+.central-grid{grid-template-columns:repeat(3,1fr)!important}
 .builder{display:none;max-width:1180px;width:100%;margin:0 auto;padding:44px 24px 48px;flex:1}
 .builder.active{display:flex;flex-direction:column;gap:18px}
 .builder-header{text-align:center;display:grid;gap:8px;margin-bottom:8px}
@@ -880,7 +878,6 @@ body.source-builder .mapping{display:none!important}
 .builder-form{display:grid;gap:12px}.builder-field{display:grid;gap:6px}.builder-label{font-size:12px;color:var(--muted)}
 .builder-input,.builder-select,.builder-textarea{width:100%;border:1px solid var(--border);border-radius:14px;padding:11px 12px;font-size:14px;outline:none;background:#fff}
 .builder-textarea{min-height:76px;resize:vertical}
-.builder-input:focus,.builder-select:focus,.builder-textarea:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(245,196,0,.15)}
 .builder-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .builder-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 .builder-status{min-height:20px;font-size:13px;color:var(--muted);line-height:1.5}
@@ -888,8 +885,9 @@ body.source-builder .mapping{display:none!important}
 .builder-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.28);display:none;align-items:center;justify-content:center;z-index:2200;padding:20px}
 .builder-modal-backdrop.open{display:flex}.builder-modal{width:min(520px,100%);background:#fff;border-radius:24px;padding:22px;box-shadow:var(--shadow);display:grid;gap:14px}
 .builder-modal-title{font-size:18px;font-weight:600}.builder-modal-text{font-size:14px;color:#4b5563;line-height:1.6}
-.builder-danger{border-color:#f2c7c3!important;color:var(--red)!important}.builder-mini{font-size:12px;color:var(--muted);line-height:1.5}
-@media(max-width:980px){.builder-grid{grid-template-columns:1fr}.central-grid{grid-template-columns:1fr!important}}
+.builder-danger{border-color:#f2c7c3!important;color:var(--red)!important}
+body.source-builder .home,body.source-builder .chat{display:none!important}
+@media(max-width:980px){.central-grid{grid-template-columns:1fr!important}.builder-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.builder{padding:28px 14px calc(24px + env(safe-area-inset-bottom))}.builder-title{font-size:22px}.builder-card{border-radius:20px;padding:16px}.builder-row{grid-template-columns:1fr}.builder-actions{display:grid;grid-template-columns:1fr}.builder-actions .btn{width:100%}}
 
 </style>
@@ -937,6 +935,7 @@ body.source-builder .mapping{display:none!important}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </button>
+
       <button class="central-box" id="openBuilderBtn" data-open="builder" type="button">
         <div class="central-icon">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -952,7 +951,6 @@ body.source-builder .mapping{display:none!important}
       </button>
     </div>
   </main>
-
 
 
   <main class="builder" id="builder">
@@ -972,7 +970,9 @@ body.source-builder .mapping{display:none!important}
         </div>
         <div class="builder-table-wrap">
           <table class="builder-table">
-            <thead><tr><th>QID</th><th>Pergunta</th><th>Tema</th><th>Classe</th></tr></thead>
+            <thead>
+              <tr><th>QID</th><th>Pergunta</th><th>Tema</th><th>Classe</th></tr>
+            </thead>
             <tbody id="builderTableBody"><tr><td colspan="4">Carregando...</td></tr></tbody>
           </table>
         </div>
@@ -982,35 +982,113 @@ body.source-builder .mapping{display:none!important}
         <div class="builder-card-title">Criar ou editar questão</div>
         <form class="builder-form" id="builderForm">
           <div class="builder-row">
-            <div class="builder-field"><label class="builder-label">Q ID</label><input class="builder-input" id="b_id_question" placeholder="Ex: Q9999_laranja_cocacola" /></div>
-            <div class="builder-field"><label class="builder-label">ID Toolkit</label><input class="builder-input" id="b_id_toolkit" value="laranja_cocacola" /></div>
+            <div class="builder-field">
+              <label class="builder-label">Q ID</label>
+              <input class="builder-input" id="b_id_question" placeholder="Ex: Q9999_laranja_cocacola" />
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">ID Toolkit</label>
+              <input class="builder-input" id="b_id_toolkit" value="laranja_cocacola" />
+            </div>
           </div>
+
           <div class="builder-row">
-            <div class="builder-field"><label class="builder-label">Pillar Name</label><input class="builder-input" id="b_pillar_name" placeholder="Ex: Ambiental" /></div>
-            <div class="builder-field"><label class="builder-label">Topic Name</label><input class="builder-input" id="b_topic_txt" placeholder="Ex: Armazenamento" /></div>
+            <div class="builder-field">
+              <label class="builder-label">Pillar Name</label>
+              <input class="builder-input" id="b_pillar_name" placeholder="Ex: Ambiental" />
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">Topic Name</label>
+              <input class="builder-input" id="b_topic_txt" placeholder="Ex: Armazenamento" />
+            </div>
           </div>
-          <div class="builder-field"><label class="builder-label">Question Text</label><textarea class="builder-textarea" id="b_question_txt" placeholder="Digite a pergunta..."></textarea></div>
+
+          <div class="builder-field">
+            <label class="builder-label">Question Text</label>
+            <textarea class="builder-textarea" id="b_question_txt" placeholder="Digite a pergunta..."></textarea>
+          </div>
+
           <div class="builder-row">
-            <div class="builder-field"><label class="builder-label">Question Type</label><select class="builder-select" id="b_type_question"><option value="adherence">Adherence</option><option value="number">Number</option><option value="unique">Unique</option><option value="multiple">Multiple</option><option value="text">Text</option><option value="date">Data</option></select></div>
-            <div class="builder-field"><label class="builder-label">Question Class</label><select class="builder-select" id="b_question_class"><option value="classgreen">classgreen</option><option value="classyellow">classyellow</option><option value="classorange">classorange</option><option value="classred">classred</option></select></div>
+            <div class="builder-field">
+              <label class="builder-label">Question Type</label>
+              <select class="builder-select" id="b_type_question">
+                <option value="adherence">Adherence</option>
+                <option value="number">Number</option>
+                <option value="unique">Unique</option>
+                <option value="multiple">Multiple</option>
+                <option value="text">Text</option>
+                <option value="date">Data</option>
+              </select>
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">Question Class</label>
+              <select class="builder-select" id="b_question_class">
+                <option value="classgreen">classgreen</option>
+                <option value="classyellow">classyellow</option>
+                <option value="classorange">classorange</option>
+                <option value="classred">classred</option>
+              </select>
+            </div>
           </div>
-          <div class="builder-field"><label class="builder-label">Possible Responses</label><textarea class="builder-textarea" id="b_possible_responses" placeholder="Uma resposta por linha. Ex: Sim&#10;Não"></textarea><div class="builder-mini">Na próxima etapa vamos transformar isso em componente com botão + por tipo de pergunta.</div></div>
-          <div class="builder-field"><label class="builder-label">Expected Answer</label><input class="builder-input" id="b_expected_answer" placeholder="Ex: Q9999='Sim'" /></div>
-          <div class="builder-field"><label class="builder-label">Associated Task</label><textarea class="builder-textarea" id="b_associated_task" placeholder="Tarefa sugerida em caso de não conformidade"></textarea></div>
-          <div class="builder-field"><label class="builder-label">Recommendation</label><textarea class="builder-textarea" id="b_recommendation" placeholder="Recomendação técnica"></textarea></div>
+
+          <div class="builder-field">
+            <label class="builder-label">Possible Responses</label>
+            <textarea class="builder-textarea" id="b_possible_responses" placeholder="Uma resposta por linha. Ex: Sim&#10;Não"></textarea>
+          </div>
+
+          <div class="builder-field">
+            <label class="builder-label">Expected Answer</label>
+            <input class="builder-input" id="b_expected_answer" placeholder="Ex: Q9999='Sim'" />
+          </div>
+
+          <div class="builder-field">
+            <label class="builder-label">Associated Task</label>
+            <textarea class="builder-textarea" id="b_associated_task" placeholder="Tarefa sugerida em caso de não conformidade"></textarea>
+          </div>
+
+          <div class="builder-field">
+            <label class="builder-label">Recommendation</label>
+            <textarea class="builder-textarea" id="b_recommendation" placeholder="Recomendação técnica"></textarea>
+          </div>
+
           <div class="builder-row">
-            <div class="builder-field"><label class="builder-label">Strong Point</label><textarea class="builder-textarea" id="b_strong_point" placeholder="Ponto forte"></textarea></div>
-            <div class="builder-field"><label class="builder-label">Weak Point</label><textarea class="builder-textarea" id="b_weak_point" placeholder="Ponto de melhoria"></textarea></div>
+            <div class="builder-field">
+              <label class="builder-label">Strong Point</label>
+              <textarea class="builder-textarea" id="b_strong_point" placeholder="Ponto forte"></textarea>
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">Weak Point</label>
+              <textarea class="builder-textarea" id="b_weak_point" placeholder="Ponto de melhoria"></textarea>
+            </div>
           </div>
-          <div class="builder-field"><label class="builder-label">Tooltip</label><textarea class="builder-textarea" id="b_tooltip" placeholder="Dica ou orientação para a pergunta"></textarea></div>
+
+          <div class="builder-field">
+            <label class="builder-label">Tooltip</label>
+            <textarea class="builder-textarea" id="b_tooltip" placeholder="Dica ou orientação para a pergunta"></textarea>
+          </div>
+
           <div class="builder-row">
-            <div class="builder-field"><label class="builder-label">Taxonomy</label><input class="builder-input" id="b_taxonomy" /></div>
-            <div class="builder-field"><label class="builder-label">Certification Standard</label><input class="builder-input" id="b_certification_standard" /></div>
+            <div class="builder-field">
+              <label class="builder-label">Taxonomy</label>
+              <input class="builder-input" id="b_taxonomy" />
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">Certification Standard</label>
+              <input class="builder-input" id="b_certification_standard" />
+            </div>
           </div>
+
           <div class="builder-row">
-            <div class="builder-field"><label class="builder-label">Unit</label><input class="builder-input" id="b_unit" /></div>
-            <div class="builder-field"><label class="builder-label">Unit Position</label><input class="builder-input" id="b_unit_position" /></div>
+            <div class="builder-field">
+              <label class="builder-label">Unit</label>
+              <input class="builder-input" id="b_unit" />
+            </div>
+            <div class="builder-field">
+              <label class="builder-label">Unit Position</label>
+              <input class="builder-input" id="b_unit_position" />
+            </div>
           </div>
+
           <div class="builder-actions">
             <button class="btn primary" id="builderSaveBtn" type="submit">Salvar questão</button>
             <button class="btn" id="builderDeleteBtn" type="button">Desativar</button>
@@ -1034,6 +1112,7 @@ body.source-builder .mapping{display:none!important}
       </div>
     </div>
   </div>
+
 
   <main class="home" id="home">
     <button class="pill-btn back-to-landing" id="backToLandingBtn" type="button">← Voltar aos ambientes</button>
@@ -1131,24 +1210,10 @@ body.source-builder .mapping{display:none!important}
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
 
     function setSource(source){
-      sourceConsulta =
-        source === 'publicacoes' ? 'publicacoes' :
-        source === 'mapeamento' ? 'mapeamento' :
-        source === 'builder' ? 'builder' :
-        'dados'
-
-      if(sourceConsulta === 'publicacoes' || sourceConsulta === 'mapeamento' || sourceConsulta === 'builder') {
-        mode = 'resposta'
-      }
-
+      sourceConsulta = source === 'publicacoes' ? 'publicacoes' : 'dados'
+      if(sourceConsulta === 'publicacoes') mode = 'resposta'
       document.body.classList.toggle('source-publicacoes', sourceConsulta === 'publicacoes')
       document.body.classList.toggle('source-dados', sourceConsulta === 'dados')
-      document.body.classList.toggle('source-mapeamento', sourceConsulta === 'mapeamento')
-      document.body.classList.toggle('source-builder', sourceConsulta === 'builder')
-
-      if(sourceConsulta === 'mapeamento' || sourceConsulta === 'builder'){
-        return
-      }
 
       const placeholder = sourceConsulta === 'publicacoes'
         ? 'Pergunte sobre publicações, artigos ou temas institucionais'
@@ -1174,43 +1239,12 @@ body.source-builder .mapping{display:none!important}
 
     function openEnvironment(source){
       setSource(source)
-
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='none'
-
-      chat.classList.remove('active')
-      document.body.classList.remove('chat-open')
-
-      if(home){
-        home.classList.remove('active')
-        home.style.display='none'
-      }
-
-      if(mapping){
-        mapping.classList.remove('active')
-        mapping.style.display='none'
-      }
-
-      if(builder){
-        builder.classList.remove('active')
-        builder.style.display='none'
-      }
-
-      if(sourceConsulta === 'mapeamento'){
-        mapping.classList.add('active')
-        mapping.style.display='flex'
-        return
-      }
-
-      if(sourceConsulta === 'builder'){
-        builder.classList.add('active')
-        builder.style.display='flex'
-        loadBuilderQuestions()
-        return
-      }
-
       home.classList.add('active')
       home.style.display='flex'
+      chat.classList.remove('active')
+      document.body.classList.remove('chat-open')
       homeQuestion.value=''
       setTimeout(()=>homeQuestion.focus(),50)
     }
@@ -1602,14 +1636,46 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     }
 
     let builderQuestions = []
-    let pendingBuilderQuestion = null
+
+    function openBuilderEnvironment(){
+      const landingEl = document.getElementById('landing')
+      if(landingEl) landingEl.style.display='none'
+      home.classList.remove('active')
+      home.style.display='none'
+      chat.classList.remove('active')
+      document.body.classList.remove('chat-open')
+      document.body.classList.add('source-builder')
+      builder.classList.add('active')
+      builder.style.display='flex'
+      loadBuilderQuestions()
+    }
+
+    function closeBuilderEnvironment(){
+      if(builder){
+        builder.classList.remove('active')
+        builder.style.display='none'
+      }
+      document.body.classList.remove('source-builder')
+      backToLanding()
+    }
 
     async function builderApi(payload){
-      const r = await fetch(WEBHOOK_BUILDER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      const r = await fetch(WEBHOOK_BUILDER_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      })
       const contentType = r.headers.get('content-type') || ''
       const data = contentType.includes('application/json') ? await r.json() : await r.text()
       if(!r.ok) throw new Error(typeof data === 'string' ? data : JSON.stringify(data))
       return data
+    }
+
+    function setBuilderStatus(text,type=''){
+      const el=document.getElementById('builderStatus')
+      if(!el)return
+      el.textContent=text
+      el.className='builder-status '+type
     }
 
     function getBuilderQuestionPayload(){
@@ -1636,13 +1702,6 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       }
     }
 
-    function setBuilderStatus(text,type=''){
-      const el=document.getElementById('builderStatus')
-      if(!el)return
-      el.textContent=text
-      el.className='builder-status '+type
-    }
-
     function fillBuilderForm(q={}){
       const set=(id,val)=>{const el=document.getElementById(id); if(el) el.value=val||''}
       set('b_id_question',q.id_question)
@@ -1665,11 +1724,13 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       set('b_unit_position',q.unit_position)
     }
 
-    function clearBuilderForm(){fillBuilderForm({id_toolkit:'laranja_cocacola',type_question:'adherence',question_class:'classgreen'});pendingBuilderQuestion=null;setBuilderStatus('')}
+    function clearBuilderForm(){
+      fillBuilderForm({id_toolkit:'laranja_cocacola',type_question:'adherence',question_class:'classgreen'})
+      setBuilderStatus('')
+    }
 
     function renderBuilderTable(){
       const body=document.getElementById('builderTableBody')
-      if(!body)return
       const search=(document.getElementById('builderSearch')?.value||'').toLowerCase()
       const rows=builderQuestions.filter(q=>[q.id_question,q.question_txt,q.topic_txt,q.question_class].join(' ').toLowerCase().includes(search)).slice(0,500)
       if(!rows.length){body.innerHTML='<tr><td colspan="4">Nenhuma questão encontrada.</td></tr>';return}
@@ -1685,61 +1746,60 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         builderQuestions=Array.isArray(data)?data:[]
         renderBuilderTable()
         setBuilderStatus('Lista carregada.','success')
-      }catch(e){if(body)body.innerHTML='<tr><td colspan="4">Erro ao carregar questões.</td></tr>';setBuilderStatus('Erro ao carregar questões.','error')}
+      }catch(e){
+        if(body)body.innerHTML='<tr><td colspan="4">Erro ao carregar questões.</td></tr>'
+        setBuilderStatus('Erro ao carregar questões.','error')
+      }
     }
 
     async function loadBuilderQuestion(id){
-      if(!id)return
       setBuilderStatus('Carregando pergunta...')
       try{
         const data=await builderApi({action:'get_question',id_question:id})
         const q=Array.isArray(data)?data[0]:data
         fillBuilderForm(q||{})
-        setBuilderStatus('Pergunta carregada para edição.','success')
+        setBuilderStatus('Pergunta carregada.','success')
       }catch(e){setBuilderStatus('Erro ao carregar pergunta.','error')}
     }
 
     async function saveBuilderQuestion(confirmUpdate=false){
       const question=getBuilderQuestionPayload()
-      if(!question.id_question||!question.question_txt){setBuilderStatus('Preencha pelo menos Q ID e Question Text.','error');return}
-      setBuilderStatus('Salvando pergunta...')
+      if(!question.id_question||!question.question_txt){setBuilderStatus('Preencha Q ID e Question Text.','error');return}
+      setBuilderStatus('Salvando...')
       try{
         const data=await builderApi({action:'save_question',confirm_update:confirmUpdate,question})
         const normalized=Array.isArray(data)?data[0]:data
         if(normalized?.status==='conflict'){
-          pendingBuilderQuestion=question
           document.getElementById('builderConfirmInput').value=''
           document.getElementById('builderConfirmModal').classList.add('open')
-          setBuilderStatus('QID já existe. Confirme se deseja sobrescrever.','error')
+          setBuilderStatus('QID já existe. Confirme para sobrescrever.','error')
           return
         }
-        setBuilderStatus(normalized?.message||'Pergunta salva com sucesso.','success')
+        setBuilderStatus(normalized?.message||'Pergunta salva.','success')
         await loadBuilderQuestions()
-      }catch(e){setBuilderStatus('Erro ao salvar pergunta.','error')}
+      }catch(e){setBuilderStatus('Erro ao salvar.','error')}
     }
 
     async function deleteBuilderQuestion(){
       const id=document.getElementById('b_id_question').value.trim()
-      if(!id){setBuilderStatus('Selecione uma pergunta para desativar.','error');return}
-      if(!confirm('Desativar esta pergunta do rascunho?'))return
-      setBuilderStatus('Desativando pergunta...')
+      if(!id){setBuilderStatus('Selecione uma pergunta.','error');return}
+      if(!confirm('Desativar esta pergunta?'))return
       try{
         const data=await builderApi({action:'delete_question',id_question:id})
         const normalized=Array.isArray(data)?data[0]:data
         setBuilderStatus(normalized?.message||'Pergunta desativada.','success')
         clearBuilderForm()
         await loadBuilderQuestions()
-      }catch(e){setBuilderStatus('Erro ao desativar pergunta.','error')}
+      }catch(e){setBuilderStatus('Erro ao desativar.','error')}
     }
 
     async function publishBuilderQuestions(){
       if(!confirm('Publicar o conteúdo atual para a tabela oficial?'))return
-      setBuilderStatus('Publicando conteúdo...')
       try{
         const data=await builderApi({action:'publish_questions'})
         const normalized=Array.isArray(data)?data[0]:data
-        setBuilderStatus(normalized?.message||'Conteúdo publicado com sucesso.','success')
-      }catch(e){setBuilderStatus('Erro ao publicar conteúdo.','error')}
+        setBuilderStatus(normalized?.message||'Conteúdo publicado.','success')
+      }catch(e){setBuilderStatus('Erro ao publicar.','error')}
     }
 
 
@@ -1759,7 +1819,11 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       if(openBtn){
         e.preventDefault()
         e.stopPropagation()
-        openEnvironment(openBtn.dataset.open)
+        if(openBtn.dataset.open === 'builder'){
+          openBuilderEnvironment()
+        }else{
+          openEnvironment(openBtn.dataset.open)
+        }
         return
       }
 
@@ -1805,8 +1869,27 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     document.getElementById('confirmClearBtn').addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);confirmModal.classList.remove('open');renderHistory()})
     attachVoice(document.getElementById('homeVoiceBtn'),homeQuestion)
     attachVoice(document.getElementById('chatVoiceBtn'),chatQuestion)
+
+    document.getElementById('backToLandingBuilderBtn')?.addEventListener('click',closeBuilderEnvironment)
+    document.getElementById('builderReloadBtn')?.addEventListener('click',loadBuilderQuestions)
+    document.getElementById('builderNewBtn')?.addEventListener('click',clearBuilderForm)
+    document.getElementById('builderSearch')?.addEventListener('input',renderBuilderTable)
+    document.getElementById('builderForm')?.addEventListener('submit',e=>{e.preventDefault();saveBuilderQuestion(false)})
+    document.getElementById('builderDeleteBtn')?.addEventListener('click',deleteBuilderQuestion)
+    document.getElementById('builderPublishBtn')?.addEventListener('click',publishBuilderQuestions)
+    document.getElementById('builderClearBtn')?.addEventListener('click',clearBuilderForm)
+    document.getElementById('builderCancelOverwriteBtn')?.addEventListener('click',()=>document.getElementById('builderConfirmModal').classList.remove('open'))
+    document.getElementById('builderConfirmOverwriteBtn')?.addEventListener('click',()=>{
+      const v=document.getElementById('builderConfirmInput').value.trim()
+      if(v!=='CONFIRMAR ALTERAÇÃO'){setBuilderStatus('Texto de confirmação inválido.','error');return}
+      document.getElementById('builderConfirmModal').classList.remove('open')
+      saveBuilderQuestion(true)
+    })
+
+
     setSource('dados')
     home.style.display='none'
+    if(builder) builder.style.display='none'
     const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='flex'
     renderHistory()
   </script>
