@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.14</title>
+  <title>SDU V27.15</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -1131,10 +1131,24 @@ body.source-builder .mapping{display:none!important}
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
 
     function setSource(source){
-      sourceConsulta = source === 'publicacoes' ? 'publicacoes' : 'dados'
-      if(sourceConsulta === 'publicacoes') mode = 'resposta'
+      sourceConsulta =
+        source === 'publicacoes' ? 'publicacoes' :
+        source === 'mapeamento' ? 'mapeamento' :
+        source === 'builder' ? 'builder' :
+        'dados'
+
+      if(sourceConsulta === 'publicacoes' || sourceConsulta === 'mapeamento' || sourceConsulta === 'builder') {
+        mode = 'resposta'
+      }
+
       document.body.classList.toggle('source-publicacoes', sourceConsulta === 'publicacoes')
       document.body.classList.toggle('source-dados', sourceConsulta === 'dados')
+      document.body.classList.toggle('source-mapeamento', sourceConsulta === 'mapeamento')
+      document.body.classList.toggle('source-builder', sourceConsulta === 'builder')
+
+      if(sourceConsulta === 'mapeamento' || sourceConsulta === 'builder'){
+        return
+      }
 
       const placeholder = sourceConsulta === 'publicacoes'
         ? 'Pergunte sobre publicações, artigos ou temas institucionais'
@@ -1160,12 +1174,43 @@ body.source-builder .mapping{display:none!important}
 
     function openEnvironment(source){
       setSource(source)
+
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='none'
-      home.classList.add('active')
-      home.style.display='flex'
+
       chat.classList.remove('active')
       document.body.classList.remove('chat-open')
+
+      if(home){
+        home.classList.remove('active')
+        home.style.display='none'
+      }
+
+      if(mapping){
+        mapping.classList.remove('active')
+        mapping.style.display='none'
+      }
+
+      if(builder){
+        builder.classList.remove('active')
+        builder.style.display='none'
+      }
+
+      if(sourceConsulta === 'mapeamento'){
+        mapping.classList.add('active')
+        mapping.style.display='flex'
+        return
+      }
+
+      if(sourceConsulta === 'builder'){
+        builder.classList.add('active')
+        builder.style.display='flex'
+        loadBuilderQuestions()
+        return
+      }
+
+      home.classList.add('active')
+      home.style.display='flex'
       homeQuestion.value=''
       setTimeout(()=>homeQuestion.focus(),50)
     }
