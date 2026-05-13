@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SDU V27.16</title>
+  <title>SDU V27.17</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap');
     :root{
@@ -890,6 +890,412 @@ body.source-builder .home,body.source-builder .chat{display:none!important}
 @media(max-width:980px){.central-grid{grid-template-columns:1fr!important}.builder-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.builder{padding:28px 14px calc(24px + env(safe-area-inset-bottom))}.builder-title{font-size:22px}.builder-card{border-radius:20px;padding:16px}.builder-row{grid-template-columns:1fr}.builder-actions{display:grid;grid-template-columns:1fr}.builder-actions .btn{width:100%}}
 
+
+/* V27.17 - Gerador de Conteúdo refinado */
+body.source-builder{
+  background:#fff;
+}
+body.source-builder .home,
+body.source-builder .chat{
+  display:none!important;
+}
+body.source-builder header{
+  border-bottom:1px solid #edf0f3;
+  background:#fff;
+}
+body.source-builder header .logo{
+  display:none;
+}
+.builder{
+  display:none;
+  max-width:1440px;
+  width:100%;
+  margin:0 auto;
+  padding:42px 56px 52px;
+  flex:1;
+  background:#fff;
+}
+.builder.active{
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+}
+.builder::before{
+  content:"";
+  width:238px;
+  height:72px;
+  background:url('solidaridad-logo.png') center/contain no-repeat;
+  display:block;
+  margin-bottom:4px;
+}
+.builder > .back-to-landing{
+  position:absolute;
+  top:32px;
+  right:190px;
+  height:46px;
+  padding:0 22px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:13px;
+  box-shadow:none;
+  color:#111827;
+  font-weight:600;
+}
+.builder-header{
+  display:grid;
+  grid-template-columns:64px 1fr;
+  align-items:center;
+  gap:20px;
+  text-align:left;
+  margin:4px 0 16px;
+}
+.builder-header .logo{
+  display:none;
+}
+.builder-header::before{
+  content:"";
+  width:64px;
+  height:64px;
+  border-radius:16px;
+  background:#fff8dd;
+  border:1px solid #f4d46b;
+  display:block;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 3h9l3 3v15H6V3Z' stroke='%23f5c400' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M14 3v4h4M9 11h6M9 15h6M9 19h4' stroke='%23f5c400' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:34px;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.builder-title{
+  font-size:44px;
+  line-height:1.08;
+  letter-spacing:-.03em;
+  font-weight:750;
+  margin:0;
+  color:#09090b;
+}
+.builder-subtitle{
+  font-size:16px;
+  color:#6b7280;
+  line-height:1.55;
+  margin:10px 0 0;
+  max-width:760px;
+}
+.builder-grid{
+  display:grid;
+  grid-template-columns:minmax(560px,1.25fr) minmax(430px,.95fr);
+  gap:24px;
+  align-items:start;
+}
+.builder-card{
+  border:1px solid #e5e7eb;
+  background:#fff;
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 10px 28px rgba(15,23,42,.05);
+}
+.builder-card-title{
+  font-size:22px;
+  font-weight:750;
+  margin:0 0 20px;
+  color:#111827;
+}
+.builder-toolbar{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:14px;
+  align-items:center;
+  margin-bottom:18px;
+}
+.builder-search{
+  min-width:0;
+  height:48px;
+  border:1px solid #e5e7eb;
+  border-radius:13px;
+  padding:0 44px 0 16px;
+  font-size:14px;
+  outline:none;
+  background:#fff;
+  color:#111827;
+}
+.builder-search:focus,
+.builder-input:focus,
+.builder-select:focus,
+.builder-textarea:focus{
+  border-color:#f5c400;
+  box-shadow:0 0 0 4px rgba(245,196,0,.16);
+}
+.builder-toolbar .btn,
+.builder-actions .btn{
+  min-height:48px;
+  border-radius:13px;
+  font-weight:700;
+}
+.builder-toolbar .primary,
+.builder-actions .primary,
+#builderPublishBtn{
+  background:#f5c400!important;
+  border-color:#f5c400!important;
+  color:#111!important;
+}
+.builder-table-wrap{
+  overflow:auto;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  max-height:720px;
+  background:#fff;
+}
+.builder-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+.builder-table th,
+.builder-table td{
+  border-bottom:1px solid #eef0f2;
+  padding:18px 18px;
+  text-align:left;
+  vertical-align:middle;
+}
+.builder-table th{
+  background:#fbfbfc;
+  color:#4b5563;
+  font-size:13px;
+  font-weight:750;
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+.builder-table td:first-child{
+  font-weight:700;
+  color:#1f2937;
+  white-space:nowrap;
+}
+.builder-table tr{
+  cursor:pointer;
+  transition:.15s;
+}
+.builder-table tr:hover{
+  background:#fff9dc;
+}
+.builder-table tr.selected{
+  background:#fff7cf;
+  outline:1px solid #f5c400;
+}
+.builder-table .status-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+  background:#ecfdf3;
+  color:#15803d;
+  border:1px solid #bbf7d0;
+}
+.builder-table .muted-cell{
+  color:#6b7280;
+  max-width:330px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.builder-form{
+  display:grid;
+  gap:16px;
+}
+.builder-field{
+  display:grid;
+  gap:8px;
+}
+.builder-label{
+  font-size:13px;
+  color:#5b6472;
+  font-weight:650;
+}
+.builder-input,
+.builder-select,
+.builder-textarea{
+  width:100%;
+  border:1px solid #e5e7eb;
+  border-radius:13px;
+  padding:13px 14px;
+  font-size:15px;
+  outline:none;
+  background:#fff;
+  color:#111827;
+}
+.builder-select{
+  height:48px;
+}
+.builder-textarea{
+  min-height:94px;
+  resize:vertical;
+  line-height:1.5;
+}
+.builder-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.builder-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:6px;
+}
+.builder-actions .btn{
+  width:100%;
+}
+.builder-status{
+  min-height:22px;
+  font-size:14px;
+  color:#6b7280;
+  line-height:1.5;
+  margin-top:4px;
+}
+.builder-status.success{
+  color:#15803d;
+  font-weight:650;
+}
+.builder-status.error{
+  color:#b91c1c;
+  font-weight:650;
+}
+.builder-modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.34);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2200;
+  padding:20px;
+  backdrop-filter:blur(4px);
+}
+.builder-modal-backdrop.open{
+  display:flex;
+}
+.builder-modal{
+  width:min(520px,100%);
+  background:#fff;
+  border-radius:24px;
+  padding:24px;
+  box-shadow:0 28px 80px rgba(15,23,42,.2);
+  display:grid;
+  gap:16px;
+}
+.builder-modal-title{
+  font-size:21px;
+  font-weight:750;
+}
+.builder-modal-text{
+  font-size:14px;
+  color:#4b5563;
+  line-height:1.6;
+}
+.builder-danger{
+  border-color:#fecaca!important;
+  color:#b91c1c!important;
+  background:#fff!important;
+}
+.builder-mini{
+  font-size:12px;
+  color:#8a93a3;
+  line-height:1.5;
+}
+.builder-publish-band{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  border:1px solid #f5c400;
+  border-radius:20px;
+  background:linear-gradient(90deg,#fffdf2,#fff);
+  padding:20px 24px;
+  box-shadow:0 8px 22px rgba(245,196,0,.08);
+}
+.builder-publish-band-title{
+  font-weight:750;
+  font-size:17px;
+  color:#111827;
+}
+.builder-publish-band-text{
+  color:#6b7280;
+  font-size:14px;
+  margin-top:4px;
+}
+.builder-loader{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.builder-loader::before{
+  content:"";
+  width:14px;
+  height:14px;
+  border-radius:999px;
+  border:2px solid #fff1a8;
+  border-top-color:#f5c400;
+  animation:builderSpin .8s linear infinite;
+}
+@keyframes builderSpin{
+  to{transform:rotate(360deg)}
+}
+@media(max-width:1180px){
+  .builder{
+    padding:34px 22px 42px;
+  }
+  .builder-grid{
+    grid-template-columns:1fr;
+  }
+  .builder > .back-to-landing{
+    position:static;
+    width:max-content;
+    order:-2;
+  }
+}
+@media(max-width:760px){
+  .builder{
+    padding:24px 14px calc(24px + env(safe-area-inset-bottom));
+  }
+  .builder::before{
+    width:168px;
+    height:54px;
+  }
+  .builder-header{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .builder-header::before{
+    width:54px;
+    height:54px;
+  }
+  .builder-title{
+    font-size:31px;
+  }
+  .builder-subtitle{
+    font-size:14px;
+  }
+  .builder-card{
+    border-radius:20px;
+    padding:16px;
+  }
+  .builder-toolbar{
+    grid-template-columns:1fr;
+  }
+  .builder-row,
+  .builder-actions{
+    grid-template-columns:1fr;
+  }
+  .builder-table th,
+  .builder-table td{
+    padding:13px 12px;
+    font-size:12px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1731,11 +2137,23 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
 
     function renderBuilderTable(){
       const body=document.getElementById('builderTableBody')
+      if(!body)return
       const search=(document.getElementById('builderSearch')?.value||'').toLowerCase()
-      const rows=builderQuestions.filter(q=>[q.id_question,q.question_txt,q.topic_txt,q.question_class].join(' ').toLowerCase().includes(search)).slice(0,500)
+      const rows=builderQuestions.filter(q=>[q.id_question,q.question_txt,q.topic_txt,q.question_class,q.builder_status].join(' ').toLowerCase().includes(search)).slice(0,500)
       if(!rows.length){body.innerHTML='<tr><td colspan="4">Nenhuma questão encontrada.</td></tr>';return}
-      body.innerHTML=rows.map(q=>`<tr data-id="${escapeHtml(q.id_question||'')}"><td>${escapeHtml(q.id_question||'')}</td><td>${escapeHtml(q.question_txt||'')}</td><td>${escapeHtml(q.topic_txt||'')}</td><td>${escapeHtml(q.question_class||'')}</td></tr>`).join('')
-      body.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>loadBuilderQuestion(tr.dataset.id)))
+      body.innerHTML=rows.map(q=>`
+        <tr data-id="${escapeHtml(q.id_question||'')}">
+          <td>${escapeHtml(q.id_question||'')}</td>
+          <td><div class="muted-cell">${escapeHtml(q.question_txt||'')}</div></td>
+          <td>${escapeHtml(q.topic_txt||q.topic_name||'')}</td>
+          <td><span class="status-pill">${escapeHtml(q.question_class||'ativo')}</span></td>
+        </tr>
+      `).join('')
+      body.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',()=>{
+        body.querySelectorAll('tr').forEach(r=>r.classList.remove('selected'))
+        tr.classList.add('selected')
+        loadBuilderQuestion(tr.dataset.id)
+      }))
     }
 
     async function loadBuilderQuestions(){
@@ -1745,10 +2163,10 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         const data=await builderApi({action:'list_questions'})
         builderQuestions=Array.isArray(data)?data:[]
         renderBuilderTable()
-        setBuilderStatus('Lista carregada.','success')
+        setBuilderStatus(`Lista carregada. ${builderQuestions.length} questões encontradas.`, 'success')
       }catch(e){
         if(body)body.innerHTML='<tr><td colspan="4">Erro ao carregar questões.</td></tr>'
-        setBuilderStatus('Erro ao carregar questões.','error')
+        setBuilderStatus('Erro ao carregar questões. Verifique se o workflow está ativo e se a URL do webhook está em produção.', 'error')
       }
     }
 
@@ -1877,6 +2295,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     document.getElementById('builderForm')?.addEventListener('submit',e=>{e.preventDefault();saveBuilderQuestion(false)})
     document.getElementById('builderDeleteBtn')?.addEventListener('click',deleteBuilderQuestion)
     document.getElementById('builderPublishBtn')?.addEventListener('click',publishBuilderQuestions)
+    document.getElementById('builderPublishBottomBtn')?.addEventListener('click',publishBuilderQuestions)
     document.getElementById('builderClearBtn')?.addEventListener('click',clearBuilderForm)
     document.getElementById('builderCancelOverwriteBtn')?.addEventListener('click',()=>document.getElementById('builderConfirmModal').classList.remove('open'))
     document.getElementById('builderConfirmOverwriteBtn')?.addEventListener('click',()=>{
