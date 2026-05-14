@@ -1735,7 +1735,7 @@ body.source-gerador .landing{display:none!important}
 }
 
 
-/* V27.17 - Correção real dos filtros, seleção em massa, toolkit buscável e export Excel */
+/* V27.18 - Filtros encadeados e bug do Event corrigido, seleção em massa, toolkit buscável e export Excel */
 .toolbar-toolkit{
   flex-wrap:wrap;
 }
@@ -1839,6 +1839,48 @@ body.source-gerador .landing{display:none!important}
   display:flex;
   gap:8px;
   flex-wrap:wrap;
+}
+
+
+/* V27.19 - Toolkit em campo único pesquisável */
+.toolbar-toolkit{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  justify-content:flex-end;
+  min-width:280px;
+}
+.toolbar-toolkit-combo{
+  width:min(520px,100%);
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:999px;
+  padding:10px 16px;
+  font-size:14px;
+  font-family:inherit;
+  outline:none;
+  transition:.16s;
+}
+.toolbar-toolkit-combo:focus,
+.toolbar-toolkit-combo:hover{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px rgba(245,196,0,.16);
+}
+.toolbar-toolkit .toolkit-search-wrap{
+  display:none!important;
+}
+#toolbarToolkit.toolbar-toolkit-select{
+  display:none!important;
+}
+@media(max-width:760px){
+  .toolbar-toolkit{
+    width:100%;
+    justify-content:stretch;
+  }
+  .toolbar-toolkit-combo{
+    width:100%;
+  }
 }
 
 </style>
@@ -1998,10 +2040,9 @@ body.source-gerador .landing{display:none!important}
       </div>
       <div class="toolbar-toolkit">
         <span class="toolbar-toolkit-label">Toolkit:</span>
-        <div class="toolkit-search-wrap">
-          <input id="toolbarToolkitSearch" type="text" placeholder="Buscar toolkit..." autocomplete="off" />
-        </div>
-        <select id="toolbarToolkit" class="toolbar-toolkit-select">
+        <input id="toolbarToolkitSearch" class="toolbar-toolkit-combo" type="text" list="toolbarToolkitOptions" placeholder="Buscar ou selecionar toolkit..." autocomplete="off" />
+        <datalist id="toolbarToolkitOptions"></datalist>
+        <select id="toolbarToolkit" class="toolbar-toolkit-select" aria-hidden="true" tabindex="-1">
           <option value="">Selecione um toolkit...</option>
         </select>
       </div>
@@ -3222,6 +3263,24 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     function configForType(type){return QUESTION_TYPE_CONFIG[type] || {responsesLocked:true,defaultResponses:[],operators:[],connectors:false,lockedExpected:true}}
 
 
+    function resolveToolkitFromCombo(inputValue){
+      const value = String(inputValue || '').trim()
+      if(!value) return ''
+      const toolkits = uniqueBy(generatorQuestions, q=>q.toolkit).map(q=>({value:q.toolkit,label:q.toolkitLabel || q.toolkit}))
+      const exact = toolkits.find(t=>t.label === value || t.value === value)
+      if(exact) return exact.value
+      const lower = value.toLowerCase()
+      const partial = toolkits.find(t=>String(t.label).toLowerCase().includes(lower) || String(t.value).toLowerCase().includes(lower))
+      return partial ? partial.value : ''
+    }
+
+    function updateToolkitComboLabel(){
+      const input = document.getElementById('toolbarToolkitSearch')
+      if(!input) return
+      const active = generatorQuestions.find(q=>q.toolkit === generatorState.toolkit)
+      input.value = active ? (active.toolkitLabel || active.toolkit) : ''
+    }
+
     function filterToolkitOptions(){
       const searchEl = document.getElementById('toolbarToolkitSearch')
       const selectEl = document.getElementById('toolbarToolkit')
@@ -3245,16 +3304,33 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       const fieldToolkit = document.getElementById('fieldToolkit')
       toolbarToolkit.addEventListener('change',()=>setToolkit(toolbarToolkit.value))
       fieldToolkit.addEventListener('change',()=>setToolkit(fieldToolkit.value))
-      document.getElementById('toolbarToolkitSearch')?.addEventListener('input', filterToolkitOptions)
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('input',(e)=>{
+        if(generatorState.mode === 'novo'){
+          const typed = e.target.value || ''
+          const fieldToolkit = document.getElementById('fieldToolkit')
+          if(fieldToolkit) fieldToolkit.value = typed
+        }
+      })
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('change',()=>{
+        const resolved = resolveToolkitFromCombo(document.getElementById('toolbarToolkitSearch').value)
+        if(resolved) setToolkit(resolved)
+      })
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('keydown',(e)=>{
+        if(e.key === 'Enter'){
+          e.preventDefault()
+          const resolved = resolveToolkitFromCombo(e.target.value)
+          if(resolved) setToolkit(resolved)
+        }
+      })
 
       document.getElementById('fieldQid').addEventListener('input', updateIdFinal)
       document.getElementById('fieldPillar').addEventListener('change',()=>{populateTopicOptions(); renderRules('dependency')})
       document.getElementById('fieldTopic').addEventListener('change',()=>renderRules('dependency'))
       document.getElementById('fieldQuestionType').addEventListener('change', syncQuestionTypeBehavior)
-      document.getElementById('librarySearch').addEventListener('input', renderLibrary)
-      document.getElementById('libraryFilterPillar')?.addEventListener('change',()=>{document.getElementById('libraryFilterTopic').value=''; populateLibraryFilters(); renderLibrary()})
-      document.getElementById('libraryFilterTopic')?.addEventListener('change', renderLibrary)
-      document.getElementById('libraryFilterQuestionClass')?.addEventListener('change', renderLibrary)
+      document.getElementById('librarySearch').addEventListener('input',()=>renderLibrary())
+      document.getElementById('libraryFilterPillar')?.addEventListener('change',()=>{populateLibraryFilters('pillar'); renderLibrary()})
+      document.getElementById('libraryFilterTopic')?.addEventListener('change',()=>{populateLibraryFilters('topic'); renderLibrary()})
+      document.getElementById('libraryFilterQuestionClass')?.addEventListener('change',()=>renderLibrary())
       document.getElementById('libraryBulkClear')?.addEventListener('click',()=>{generatorState.selectedQuestionIds.clear(); renderLibrary(); updateBulkSelectionUI()})
       document.getElementById('fieldQuestionClass')?.addEventListener('change',()=>{})
       document.getElementById('applyBulkDependencyBtn')?.addEventListener('click',()=>applyBulkDependency(false))
@@ -3305,6 +3381,31 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     function setGeneratorMode(mode){
       generatorState.mode = mode
       document.querySelectorAll('.toolbar-mode').forEach(b=>b.classList.toggle('active', b.dataset.genMode === mode))
+
+      const toolkitCombo = document.getElementById('toolbarToolkitSearch')
+      const toolkitSelect = document.getElementById('fieldToolkit')
+
+      if(toolkitCombo){
+        if(mode === 'novo'){
+          toolkitCombo.removeAttribute('list')
+          toolkitCombo.placeholder = 'Digite um novo toolkit...'
+          toolkitCombo.value = ''
+          toolkitCombo.readOnly = false
+        }else{
+          toolkitCombo.setAttribute('list','toolbarToolkitOptions')
+          toolkitCombo.placeholder = 'Buscar toolkit...'
+          updateToolkitComboLabel()
+        }
+      }
+
+      if(toolkitSelect){
+        if(mode === 'novo'){
+          toolkitSelect.style.display = 'none'
+        }else{
+          toolkitSelect.style.display = ''
+        }
+      }
+
       if(mode === 'novo'){
         clearBuilder()
         renderLibrary(true)
@@ -3317,12 +3418,13 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       generatorState.selectedQuestionIds.clear()
       document.getElementById('toolbarToolkit').value = toolkit
       document.getElementById('fieldToolkit').value = toolkit
+      updateToolkitComboLabel()
       populatePillarOptions()
       populateTopicOptions()
       document.getElementById('libraryFilterPillar') && (document.getElementById('libraryFilterPillar').value = '')
       document.getElementById('libraryFilterTopic') && (document.getElementById('libraryFilterTopic').value = '')
       document.getElementById('libraryFilterQuestionClass') && (document.getElementById('libraryFilterQuestionClass').value = '')
-      populateLibraryFilters()
+      populateLibraryFilters('toolkit')
       updateIdFinal()
       renderLibrary(generatorState.mode === 'novo')
       renderRules('dependency')
@@ -3331,6 +3433,10 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       const toolkits = uniqueBy(generatorQuestions, q=>q.toolkit).map(q=>({value:q.toolkit,label:q.toolkitLabel || q.toolkit}))
       const options = '<option value="">Selecione um toolkit...</option>' + toolkits.map(t=>`<option value="${escapeHtml(t.value)}">${escapeHtml(t.label)}</option>`).join('')
       document.getElementById('toolbarToolkit').innerHTML = options
+      const toolkitDatalist = document.getElementById('toolbarToolkitOptions')
+      if(toolkitDatalist){
+        toolkitDatalist.innerHTML = toolkits.map(t=>`<option value="${escapeHtml(t.label)}" data-value="${escapeHtml(t.value)}"></option>`).join('')
+      }
       document.getElementById('fieldToolkit').innerHTML = options.replace('Selecione um toolkit...', 'Selecione...')
       populatePillarOptions()
       populateTopicOptions()
@@ -3370,23 +3476,56 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       if(current && values.includes(current)) el.value = current
     }
 
-    function populateLibraryFilters(){
+    function populateLibraryFilters(changedLevel=''){
       const tk = generatorState.toolkit
       const base = tk ? questionsForToolkit(tk) : []
 
-      const currentPillar = document.getElementById('libraryFilterPillar')?.value || ''
-      const currentTopic = document.getElementById('libraryFilterTopic')?.value || ''
+      const pillarEl = document.getElementById('libraryFilterPillar')
+      const topicEl = document.getElementById('libraryFilterTopic')
+      const classEl = document.getElementById('libraryFilterQuestionClass')
+      if(!pillarEl || !topicEl || !classEl) return
 
-      const pillars = uniqueBy(base, q=>q.pillar).map(q=>q.pillar).sort((a,b)=>a.localeCompare(b))
-      populateSelectOptions('libraryFilterPillar', pillars, 'Todos os Pillars')
+      let currentPillar = pillarEl.value || ''
+      let currentTopic = topicEl.value || ''
+      let currentClass = classEl.value || ''
+
+      if(changedLevel === 'pillar'){
+        currentTopic = ''
+        currentClass = ''
+      }
+      if(changedLevel === 'topic'){
+        currentClass = ''
+      }
+
+      const makeOptions = (values, current, firstLabel) => {
+        const unique = [...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b)))
+        const validCurrent = unique.includes(current) ? current : ''
+        return {
+          html: [`<option value="">${escapeHtml(firstLabel)}</option>`]
+            .concat(unique.map(v=>`<option value="${escapeHtml(v)}" ${v === validCurrent ? 'selected' : ''}>${escapeHtml(v)}</option>`))
+            .join(''),
+          value: validCurrent,
+          count: unique.length
+        }
+      }
+
+      const pillarOptions = makeOptions(base.map(q=>q.pillar), currentPillar, 'Todos os Pillars')
+      pillarEl.innerHTML = pillarOptions.html
+      pillarEl.value = pillarOptions.value
+      currentPillar = pillarOptions.value
 
       const topicBase = currentPillar ? base.filter(q=>q.pillar === currentPillar) : base
-      const topics = uniqueBy(topicBase, q=>q.topic).map(q=>q.topic).sort((a,b)=>a.localeCompare(b))
-      populateSelectOptions('libraryFilterTopic', topics, 'Todos os Topics')
+      const topicOptions = makeOptions(topicBase.map(q=>q.topic), currentTopic, 'Todos os Topics')
+      topicEl.innerHTML = topicOptions.html
+      topicEl.value = topicOptions.value
+      topicEl.disabled = !topicOptions.count
+      currentTopic = topicOptions.value
 
       const classBase = currentTopic ? topicBase.filter(q=>q.topic === currentTopic) : topicBase
-      const classes = uniqueBy(classBase, q=>q.questionClass).map(q=>q.questionClass).sort((a,b)=>a.localeCompare(b))
-      populateSelectOptions('libraryFilterQuestionClass', classes, 'Todas as Question Classes')
+      const classOptions = makeOptions(classBase.map(q=>q.questionClass), currentClass, 'Todas as Question Classes')
+      classEl.innerHTML = classOptions.html
+      classEl.value = classOptions.value
+      classEl.disabled = !classOptions.count
     }
 
     function updateBulkSelectionUI(){
@@ -3406,6 +3545,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     }
 
     function renderLibrary(forceBlank=false){
+      forceBlank = forceBlank === true
       const list = document.getElementById('libraryList')
       const countEl = document.getElementById('libraryCount')
       if(forceBlank || generatorState.mode === 'novo'){
@@ -3797,7 +3937,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     renderHistory()
   </script>
 <script>
-/* V27.17 - Exportação Excel corrigida */
+/* V27.18 - Exportação Excel corrigida */
 document.addEventListener('DOMContentLoaded', () => {
   const exportBtn = document.getElementById('exportExcelBtn')
   if(!exportBtn) return
