@@ -2189,6 +2189,7 @@ body.source-gerador .landing{display:none!important}
         if(generatorEl){generatorEl.classList.remove('active');generatorEl.style.display='none'}
         mapping.classList.add('active')
         mapping.style.display='flex'
+        loadMappingQuestionsForIA()
         if(pushState) history.pushState({sduSource:'mapeamento'}, '', '#mapeamento')
         return
       }
@@ -2621,6 +2622,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       }
     }
 
+    let mappingQuestionsReady = false
     let selectedEvidenceFile = null
     let selectedEvidenceBase64 = ""
 
@@ -2631,15 +2633,69 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
     }
 
-    function updateMappingQuestion(){
+    function mappingQuestionFromContent(q){
+      if(!q) return null
+      return {
+        id_question:q.qid,
+        title:[q.qid, q.topic || q.text].filter(Boolean).join(' - '),
+        question_txt:q.text || '',
+        recommendation:q.recommendation || '',
+        expected_answer:Array.isArray(q.expectedRules) ? JSON.stringify(q.expectedRules) : '',
+        strong_point:q.strongPoint || 'Evidência visual compatível com o critério esperado.',
+        weak_point:q.weakPoint || 'Evidência visual incompatível ou insuficiente para o critério esperado.'
+      }
+    }
+
+    function getSelectedMappingQuestion(){
       const select = document.getElementById('mappingQuestionSelect')
+      const selected = select?.value || ''
+      return mappingQuestionFromContent((generatorQuestions || []).find(q=>q.qid === selected)) || MAPPING_QUESTIONS[selected] || null
+    }
+
+    function populateMappingQuestionSelect(){
+      const select = document.getElementById('mappingQuestionSelect')
+      if(!select) return
+      const rows = (generatorQuestions || []).filter(q=>q.qid && q.text)
+      if(!rows.length){
+        select.innerHTML = '<option value="">Nenhuma questão vigente carregada</option>'
+        mappingQuestionsReady = false
+        updateMappingQuestion()
+        return
+      }
+      const current = select.value
+      select.innerHTML = rows.map(q=>{
+        const label = [q.qid, q.topic || q.text].filter(Boolean).join(' - ')
+        return '<option value="' + escapeHtml(q.qid) + '" ' + (q.qid===current?'selected':'') + '>' + escapeHtml(label) + '</option>'
+      }).join('')
+      if(current && rows.some(q=>q.qid===current)) select.value = current
+      else select.value = rows[0].qid
+      mappingQuestionsReady = true
+      updateMappingQuestion()
+    }
+
+    async function loadMappingQuestionsForIA(){
+      const statusEl = document.getElementById('mappingStatus')
+      if(statusEl && !generatorQuestions.length){
+        statusEl.textContent = 'Carregando questões vigentes para avaliação com I.A...'
+        statusEl.className = 'mapping-status info-box'
+      }
+      await loadGeneratorContentFromWebhook()
+      populateMappingQuestionSelect()
+      if(statusEl && generatorQuestions.length){
+        statusEl.textContent = ''
+        statusEl.className = 'mapping-status'
+      }
+    }
+
+    function updateMappingQuestion(){
       const box = document.getElementById('mappingQuestionBox')
-      const q = MAPPING_QUESTIONS[select.value]
-      if(!q || !box) return
-      box.innerHTML = `
-        <p><strong>Questão:</strong> ${escapeHtml(q.question_txt)}</p>
-        <p><strong>Recomendação:</strong> ${escapeHtml(q.recommendation)}</p>
-      `
+      const q = getSelectedMappingQuestion()
+      if(!box) return
+      if(!q){
+        box.innerHTML = '<p><strong>Questão:</strong> Nenhuma questão vigente carregada.</p><p><strong>Recomendação:</strong> Verifique se o webhook do Gerador está retornando a tabela content_questions_draft.</p>'
+        return
+      }
+      box.innerHTML = '<p><strong>Questão:</strong> ' + escapeHtml(q.question_txt) + '</p><p><strong>Recomendação:</strong> ' + escapeHtml(q.recommendation) + '</p>'
     }
 
     function fileToBase64(file){
@@ -2699,12 +2755,12 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     }
 
     function renderEvaluationResult(result){
-      const q = MAPPING_QUESTIONS[document.getElementById('mappingQuestionSelect').value]
+      const q = getSelectedMappingQuestion() || {}
       const status = result.status || 'inconclusivo'
       const confidence = typeof result.confidence === 'number' ? result.confidence : 0
       const confidencePct = confidence <= 1 ? Math.round(confidence * 100) : Math.round(confidence)
       const approved = status === 'conforme'
-      const pointText = approved ? q.strong_point : (status === 'inconclusivo' ? result.recommendation_ai || 'Envie uma evidência mais clara para avaliação.' : q.weak_point)
+      const pointText = approved ? (q.strong_point || 'Evidência compatível com o critério esperado.') : (status === 'inconclusivo' ? result.recommendation_ai || 'Envie uma evidência mais clara para avaliação.' : (q.weak_point || 'Evidência incompatível ou insuficiente para o critério esperado.'))
       const observed = Array.isArray(result.observed_evidence) ? result.observed_evidence : []
       const pending = Array.isArray(result.pending_items) ? result.pending_items : []
 
@@ -2766,6 +2822,11 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     async function sendEvidenceEvaluation(){
       const statusEl = document.getElementById('mappingStatus')
       const questionId = document.getElementById('mappingQuestionSelect').value
+      if(!questionId || !getSelectedMappingQuestion()){
+        statusEl.textContent = 'Carregue e selecione uma questão vigente antes de avaliar.'
+        statusEl.className = 'mapping-status error'
+        return
+      }
       if(!selectedEvidenceFile || !selectedEvidenceBase64){
         statusEl.textContent = 'Selecione uma foto ou arquivo antes de avaliar.'
         statusEl.className = 'mapping-status error'
@@ -2850,7 +2911,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       generatorState.loading = true
       renderLibrary()
       try{
-        const r = await fetch(WEBHOOK_GERADOR_URL,{method:'GET',headers:{'Accept':'application/json'}})
+        const r = await fetch(WEBHOOK_GERADOR_URL,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({fonte:'content_questions_draft'})})
         const contentType = r.headers.get('content-type') || ''
         const raw = contentType.includes('application/json') ? await r.json() : await r.text()
         if(!r.ok) throw new Error(typeof raw === 'string' ? raw : JSON.stringify(raw))
