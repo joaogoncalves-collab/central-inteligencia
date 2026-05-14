@@ -2036,6 +2036,350 @@ body.source-gerador .landing{display:none!important}
   white-space:nowrap;
 }
 
+
+/* V27.28 - Fluxo seguro: módulos, rascunhos e envio final ao BigQuery */
+.editor-module-tabs{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:4px;
+}
+.editor-module-tab{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:999px;
+  padding:10px 16px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.16s;
+}
+.editor-module-tab.active{
+  background:var(--yellow-soft);
+  border-color:var(--yellow);
+  box-shadow:0 4px 14px rgba(245,196,0,.20);
+}
+.editor-module-tab:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px rgba(0,0,0,.08);
+}
+.editor-module-panel{display:none}
+.editor-module-panel.active{display:block}
+.draft-summary-card{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:22px;
+  box-shadow:0 4px 16px rgba(0,0,0,.04);
+  overflow:hidden;
+}
+.draft-summary-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#fffef7,#fff);
+}
+.draft-summary-title{
+  font-size:15px;
+  font-weight:700;
+}
+.draft-summary-count{
+  border:1px solid var(--yellow);
+  background:var(--yellow-soft);
+  color:#6b4e00;
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+.draft-summary-body{
+  padding:16px 20px;
+  display:grid;
+  gap:10px;
+}
+.draft-summary-empty{
+  border:1px dashed var(--border);
+  border-radius:16px;
+  padding:14px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+  background:#fafafa;
+}
+.draft-list{
+  display:grid;
+  gap:8px;
+}
+.draft-item{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px 12px;
+  display:grid;
+  gap:4px;
+  background:#fff;
+}
+.draft-item-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.draft-item-qid{
+  font-weight:700;
+  font-size:13px;
+}
+.draft-badge{
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.03em;
+  color:#fff;
+  background:#111;
+}
+.draft-badge.edited{background:#6b4e00}
+.draft-badge.disabled{background:#b3261e}
+.draft-badge.bulk_dependency{background:#1a73e8}
+.draft-item-desc{
+  font-size:12px;
+  color:#4b5563;
+  line-height:1.45;
+}
+.final-bq-zone{
+  border:1px solid #f2c7c3;
+  background:#fffafa;
+  border-radius:22px;
+  padding:18px 20px;
+  display:grid;
+  gap:10px;
+}
+.final-bq-title{
+  font-size:15px;
+  font-weight:800;
+  color:#7f1d1d;
+}
+.final-bq-text{
+  font-size:13px;
+  color:#4b5563;
+  line-height:1.55;
+}
+.builder-btn.final-bq{
+  background:#b3261e;
+  color:#fff;
+  box-shadow:0 4px 14px rgba(179,38,30,.24);
+  justify-self:flex-start;
+}
+.builder-btn.final-bq:hover{
+  background:#8f1d17;
+  box-shadow:0 8px 22px rgba(179,38,30,.34);
+}
+.bq-modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.36);
+  z-index:4000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.bq-modal-backdrop.open{display:flex}
+.bq-modal{
+  width:min(760px,100%);
+  max-height:88vh;
+  overflow:auto;
+  background:#fff;
+  border-radius:24px;
+  box-shadow:0 24px 64px rgba(0,0,0,.22);
+  border:1px solid var(--border);
+}
+.bq-modal-header{
+  padding:20px 22px;
+  border-bottom:1px solid var(--border);
+}
+.bq-modal-title{
+  font-size:18px;
+  font-weight:800;
+  margin:0 0 6px;
+}
+.bq-modal-subtitle{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.5;
+}
+.bq-modal-body{
+  padding:18px 22px;
+  display:grid;
+  gap:14px;
+}
+.bq-review-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.bq-review-stat{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:12px;
+  background:#fafafa;
+}
+.bq-review-number{
+  font-size:22px;
+  font-weight:800;
+}
+.bq-review-label{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.35;
+}
+.bq-review-list{
+  display:grid;
+  gap:8px;
+  max-height:260px;
+  overflow:auto;
+}
+.bq-confirm-input{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 14px;
+  font-size:14px;
+  font-family:inherit;
+  outline:none;
+}
+.bq-confirm-input:focus{
+  border-color:#b3261e;
+  box-shadow:0 0 0 3px rgba(179,38,30,.12);
+}
+.bq-modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:16px 22px 20px;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.builder-btn.final-bq[disabled]{
+  opacity:.45;
+  cursor:not-allowed;
+  transform:none!important;
+  box-shadow:none!important;
+}
+@media(max-width:760px){
+  .bq-review-grid{grid-template-columns:1fr 1fr}
+  .editor-module-tab{flex:1}
+}
+
+
+/* V27.29 - Correção da aba Dependências em massa */
+body.bulk-dependency-mode #moduleQuestionsPanel,
+body.bulk-dependency-mode #moduleAfterBulkQuestionsPanel{
+  display:none!important;
+}
+body.bulk-dependency-mode #moduleBulkDependencyPanel{
+  display:block!important;
+}
+body.questions-mode #moduleQuestionsPanel,
+body.questions-mode #moduleAfterBulkQuestionsPanel{
+  display:block!important;
+}
+body.questions-mode #moduleBulkDependencyPanel{
+  display:none!important;
+}
+.editor-module-panel.active{
+  display:block!important;
+}
+
+
+/* V27.30 - Painel forçado de Dependências em massa */
+.forced-bulk-panel{
+  display:none;
+  border:1px solid var(--border);
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 4px 16px rgba(0,0,0,.04);
+  overflow:hidden;
+  margin-top:12px;
+}
+body.bulk-dependency-mode .forced-bulk-panel{
+  display:block!important;
+}
+.forced-bulk-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#fffef7,#fff);
+}
+.forced-bulk-title{
+  font-size:16px;
+  font-weight:800;
+}
+.forced-bulk-hint{
+  font-size:12px;
+  color:var(--muted);
+}
+.forced-bulk-body{
+  padding:18px 20px;
+  display:grid;
+  gap:14px;
+}
+.forced-bulk-warning{
+  border:1px dashed var(--yellow);
+  background:#fffdf0;
+  border-radius:16px;
+  padding:14px;
+  color:#6b4e00;
+  font-size:13px;
+  line-height:1.5;
+}
+.forced-bulk-grid{
+  display:grid;
+  grid-template-columns:1.4fr .7fr 1fr;
+  gap:12px;
+}
+.forced-bulk-field{
+  display:grid;
+  gap:6px;
+}
+.forced-bulk-field label{
+  font-size:12px;
+  font-weight:700;
+  color:#374151;
+}
+.forced-bulk-input,
+.forced-bulk-select{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:11px 13px;
+  font-size:14px;
+  font-family:inherit;
+  outline:none;
+  background:#fff;
+}
+.forced-bulk-input:focus,
+.forced-bulk-select:focus{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px rgba(245,196,0,.16);
+}
+.forced-bulk-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  padding:16px 20px;
+  background:#fafafa;
+  border-top:1px solid var(--border);
+}
+@media(max-width:900px){
+  .forced-bulk-grid{grid-template-columns:1fr}
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -2242,6 +2586,54 @@ body.source-gerador .landing{display:none!important}
 
       <!-- Builder (direita) -->
       <div class="builder-wrap">
+        <div class="editor-module-tabs">
+          <button class="editor-module-tab active" id="moduleQuestionsTab" type="button" data-module-target="questions">Questões</button>
+          <button class="editor-module-tab" id="moduleBulkDependencyTab" type="button" data-module-target="bulkDependency">Dependências em massa</button>
+        </div>
+        
+<section class="forced-bulk-panel" id="forcedBulkDependencyPanel">
+  <div class="forced-bulk-header">
+    <div class="forced-bulk-title">Dependências em massa</div>
+    <div class="forced-bulk-hint">Aplicar Dependency IF nas questões selecionadas</div>
+  </div>
+  <div class="forced-bulk-body">
+    <div class="forced-bulk-warning">
+      Selecione as questões na biblioteca à esquerda. Depois escolha uma pergunta base e o valor esperado. A alteração entra como rascunho e só será enviada no fluxo final.
+    </div>
+    <div class="forced-bulk-grid">
+      <div class="forced-bulk-field">
+        <label>Pergunta base</label>
+        <select class="forced-bulk-select" id="forcedBulkQuestion">
+          <option value="">Selecione a pergunta...</option>
+        </select>
+      </div>
+      <div class="forced-bulk-field">
+        <label>Operador</label>
+        <select class="forced-bulk-select" id="forcedBulkOperator">
+          <option value="igual">IGUAL A</option>
+          <option value="diferente">DIFERENTE DE</option>
+          <option value="maior">MAIOR QUE</option>
+          <option value="menor">MENOR QUE</option>
+        </select>
+      </div>
+      <div class="forced-bulk-field">
+        <label>Valor esperado</label>
+        <input class="forced-bulk-input" id="forcedBulkValue" placeholder="Ex.: Sim, Não, Travado..." />
+      </div>
+    </div>
+    <div class="forced-bulk-field">
+      <label>Resumo da regra</label>
+      <input class="forced-bulk-input" id="forcedBulkSummary" readonly placeholder="Selecione uma pergunta base para montar a regra..." />
+    </div>
+  </div>
+  <div class="forced-bulk-actions">
+    <button class="builder-btn ghost" id="forcedBulkRefresh" type="button">Atualizar lista de perguntas</button>
+    <button class="builder-btn yellow" id="forcedBulkApply" type="button">Aplicar Dependency IF nas selecionadas</button>
+    <button class="builder-btn ghost" id="forcedBulkReplace" type="button">Substituir Dependency IF das selecionadas</button>
+  </div>
+</section>
+
+        <div class="editor-module-panel active" id="moduleQuestionsPanel">
 
         <!-- Identificação -->
         <section class="builder-section">
@@ -2372,7 +2764,9 @@ body.source-gerador .landing{display:none!important}
               </button>
             </div>
 
-            <!-- Dependency IF -->
+            </div>
+        <div class="editor-module-panel" id="moduleBulkDependencyPanel">
+<!-- Dependency IF -->
             <div class="rules-block">
               <div class="rules-block-title">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6 4v6a3 3 0 0 0 3 3h6M15 10l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2396,7 +2790,9 @@ body.source-gerador .landing{display:none!important}
           </div>
         </section>
 
-        <!-- Inteligência -->
+        </div>
+        <div class="editor-module-panel active" id="moduleAfterBulkQuestionsPanel">
+<!-- Inteligência -->
         <section class="builder-section">
           <header class="builder-section-header">
             <div class="builder-section-icon">
@@ -2443,6 +2839,22 @@ body.source-gerador .landing{display:none!important}
           </div>
         </section>
 
+        <section class="draft-summary-card" id="draftSummaryCard">
+          <div class="draft-summary-header">
+            <div class="draft-summary-title">Alterações em rascunho</div>
+            <div class="draft-summary-count" id="draftSummaryCount">0 pendentes</div>
+          </div>
+          <div class="draft-summary-body" id="draftSummaryBody">
+            <div class="draft-summary-empty">Nenhuma alteração em rascunho ainda. Salve questões, edições, desativações ou dependências em massa antes de enviar ao BigQuery.</div>
+          </div>
+        </section>
+
+        <section class="final-bq-zone">
+          <div class="final-bq-title">Envio final para o BigQuery</div>
+          <div class="final-bq-text">Este é o último ato possível do editor. Revise os rascunhos, exporte o Excel se necessário e envie para a base oficial somente depois da confirmação textual.</div>
+          <button class="builder-btn final-bq" id="btnOpenBQConfirm" type="button">Enviar alterações para o BigQuery</button>
+        </section>
+
         <!-- Botões de ação -->
         <div class="builder-actions">
           <div class="builder-actions-left">
@@ -2472,9 +2884,9 @@ body.source-gerador .landing{display:none!important}
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Salvar questão
           </button>
-          <button class="builder-btn yellow" type="button" id="btnSalvarAplicar">
+          <button class="builder-btn yellow" type="button" id="btnSalvarRascunho">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Salvar e aplicar
+            Salvar rascunho
           </button>
         </div>
 
@@ -3636,7 +4048,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
 
       document.querySelectorAll('[data-add-rule]').forEach(btn=>btn.addEventListener('click',()=>addRule(btn.dataset.addRule)))
       document.getElementById('btnSalvar').addEventListener('click',()=>handleSave(false))
-      document.getElementById('btnSalvarAplicar').addEventListener('click',()=>handleSave(true))
+      (document.getElementById('btnSalvarRascunho') || document.getElementById('btnSalvarAplicar'))?.addEventListener('click',()=>handleSave(false))
       document.getElementById('btnLimpar').addEventListener('click',clearBuilder)
       document.getElementById('btnDesativar').addEventListener('click',()=>setBuilderStatus('Questão desativada (visual apenas - integração pendente).','success'))
       document.getElementById('btnExcluirRascunho').addEventListener('click',()=>{if(confirm('Tem certeza que deseja excluir este rascunho?')){clearBuilder();setBuilderStatus('Rascunho excluído.','success')}})
@@ -4541,7 +4953,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }],
       ['btnSalvar', () => saveGeneratorSafe(false)],
-      ['btnSalvarAplicar', () => saveGeneratorSafe(true)],
+      ['btnSalvarRascunho', () => saveGeneratorSafe(false)],
       ['exportExcelBtn', () => exportGeneratorExcelSafe()]
     ]
 
@@ -4626,6 +5038,458 @@ document.addEventListener('click', function(e){
   if(typeof renderRules === 'function') renderRules('dependency')
   if(typeof updateBulkSelectionUI === 'function') updateBulkSelectionUI()
 }, true)
+</script>
+
+
+<div class="bq-modal-backdrop" id="bqConfirmModal">
+  <div class="bq-modal" role="dialog" aria-modal="true" aria-labelledby="bqConfirmTitle">
+    <div class="bq-modal-header">
+      <h3 class="bq-modal-title" id="bqConfirmTitle">Confirmar envio para o BigQuery</h3>
+      <div class="bq-modal-subtitle">Revise tudo o que será enviado. Para liberar o botão final, digite CONFIRMAR no campo de confirmação.</div>
+    </div>
+    <div class="bq-modal-body">
+      <div class="bq-review-grid">
+        <div class="bq-review-stat"><div class="bq-review-number" id="bqStatNew">0</div><div class="bq-review-label">Novas questões</div></div>
+        <div class="bq-review-stat"><div class="bq-review-number" id="bqStatEdited">0</div><div class="bq-review-label">Questões editadas</div></div>
+        <div class="bq-review-stat"><div class="bq-review-number" id="bqStatDisabled">0</div><div class="bq-review-label">Questões desativadas</div></div>
+        <div class="bq-review-stat"><div class="bq-review-number" id="bqStatBulk">0</div><div class="bq-review-label">Dependências em massa</div></div>
+      </div>
+      <div>
+        <strong>Resumo das alterações</strong>
+        <div class="bq-review-list" id="bqReviewList"></div>
+      </div>
+      <div>
+        <strong>Confirmação textual</strong>
+        <input class="bq-confirm-input" id="bqConfirmInput" type="text" placeholder="Digite CONFIRMAR" autocomplete="off" />
+      </div>
+    </div>
+    <div class="bq-modal-actions">
+      <button class="builder-btn ghost" id="btnCancelBQConfirm" type="button">Cancelar</button>
+      <button class="builder-btn final-bq" id="btnConfirmSendBQ" type="button" disabled>Enviar definitivamente para o BigQuery</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* V27.28 - Gerenciador de rascunhos e confirmação final BigQuery */
+(function(){
+  function $(id){ return document.getElementById(id) }
+
+  window.SDU_DRAFT_CHANGES = window.SDU_DRAFT_CHANGES || []
+
+  function escapeLocal(value){
+    return String(value ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))
+  }
+
+  function badgeLabel(type){
+    return {
+      new:'NEW',
+      edited:'EDITED',
+      disabled:'DISABLED',
+      bulk_dependency:'BULK DEPENDENCY'
+    }[type] || 'DRAFT'
+  }
+
+  function normalizeDraftType(type){
+    if(type === 'bulk_dependency') return 'bulk_dependency'
+    if(type === 'disabled') return 'disabled'
+    if(type === 'edited') return 'edited'
+    return 'new'
+  }
+
+  window.addDraftChange = function(change){
+    const type = normalizeDraftType(change.type)
+    const key = change.key || `${type}:${change.qid || change.title || Date.now()}`
+    const existing = window.SDU_DRAFT_CHANGES.findIndex(d => d.key === key)
+    const normalized = {...change, type, key, createdAt:new Date().toISOString()}
+    if(existing >= 0) window.SDU_DRAFT_CHANGES[existing] = {...window.SDU_DRAFT_CHANGES[existing], ...normalized}
+    else window.SDU_DRAFT_CHANGES.unshift(normalized)
+    renderDraftSummary()
+  }
+
+  window.renderDraftSummary = function(){
+    const countEl = $('draftSummaryCount')
+    const body = $('draftSummaryBody')
+    const drafts = window.SDU_DRAFT_CHANGES || []
+    if(countEl) countEl.textContent = `${drafts.length} pendente${drafts.length === 1 ? '' : 's'}`
+    if(!body) return
+    if(!drafts.length){
+      body.innerHTML = '<div class="draft-summary-empty">Nenhuma alteração em rascunho ainda. Salve questões, edições, desativações ou dependências em massa antes de enviar ao BigQuery.</div>'
+      return
+    }
+    body.innerHTML = `<div class="draft-list">${drafts.map(d=>`
+      <div class="draft-item">
+        <div class="draft-item-top">
+          <span class="draft-item-qid">${escapeLocal(d.qid || d.title || 'Alteração')}</span>
+          <span class="draft-badge ${escapeLocal(d.type)}">${escapeLocal(badgeLabel(d.type))}</span>
+        </div>
+        <div class="draft-item-desc">${escapeLocal(d.description || d.questionText || d.summary || '')}</div>
+      </div>
+    `).join('')}</div>`
+  }
+
+  function collectCurrentQuestionDraft(type){
+    const modeNovo = document.querySelector('[data-gen-mode="novo"]')?.classList.contains('active')
+    const qid = ($('fieldQid')?.value || '').trim()
+    const toolkit = modeNovo ? (($('toolbarToolkitSearch')?.value || '').trim()) : (($('fieldToolkit')?.value || $('toolbarToolkit')?.value || '').trim())
+    const questionText = ($('fieldQuestionText')?.value || '').trim()
+    return {
+      type,
+      key:`${type}:${qid}:${toolkit}`,
+      qid,
+      toolkit,
+      questionText,
+      description:`${toolkit || '-'} | ${$('fieldPillar')?.value || '-'} > ${$('fieldTopic')?.value || '-'} | ${questionText || 'Sem texto'}`
+    }
+  }
+
+  function markCurrentAsDraft(type){
+    const draft = collectCurrentQuestionDraft(type)
+    if(!draft.qid || !draft.toolkit || !draft.questionText){
+      const status = $('builderStatus')
+      if(status){
+        status.textContent = 'Preencha QID, Toolkit e o texto da pergunta antes de salvar o rascunho.'
+        status.className = 'builder-status error'
+      }
+      return false
+    }
+    window.addDraftChange(draft)
+    return true
+  }
+
+  function patchButtons(){
+    const save = $('btnSalvar')
+    const saveDraft = $('btnSalvarRascunho') || $('btnSalvarAplicar')
+    const disable = $('btnDesativar')
+
+    if(save && save.dataset.draftPatched !== '1'){
+      save.dataset.draftPatched = '1'
+      save.addEventListener('click', function(){
+        const qid = ($('fieldQid')?.value || '').trim()
+        const isNew = !!document.querySelector('.library-item.is-new[data-qid="'+CSS.escape(qid)+'"]') || !document.querySelector('.library-item[data-qid="'+CSS.escape(qid)+'"]')
+        markCurrentAsDraft(isNew ? 'new' : 'edited')
+      }, true)
+    }
+
+    if(saveDraft && saveDraft.dataset.draftPatched !== '1'){
+      saveDraft.dataset.draftPatched = '1'
+      saveDraft.addEventListener('click', function(){
+        const qid = ($('fieldQid')?.value || '').trim()
+        const isNew = !!document.querySelector('.library-item.is-new[data-qid="'+CSS.escape(qid)+'"]') || !document.querySelector('.library-item[data-qid="'+CSS.escape(qid)+'"]')
+        markCurrentAsDraft(isNew ? 'new' : 'edited')
+      }, true)
+    }
+
+    if(disable && disable.dataset.draftPatched !== '1'){
+      disable.dataset.draftPatched = '1'
+      disable.addEventListener('click', function(){
+        markCurrentAsDraft('disabled')
+      }, true)
+    }
+
+    const applyBulk = $('applyBulkDependencyBtn')
+    const replaceBulk = $('replaceBulkDependencyBtn')
+
+    ;[applyBulk, replaceBulk].forEach(btn=>{
+      if(!btn || btn.dataset.draftPatched === '1') return
+      btn.dataset.draftPatched = '1'
+      btn.addEventListener('click', function(){
+        const selectedCount = document.querySelectorAll('.library-item-check:checked').length
+        window.addDraftChange({
+          type:'bulk_dependency',
+          key:`bulk_dependency:${Date.now()}`,
+          title:'Dependency IF em massa',
+          description:`${selectedCount} questão${selectedCount === 1 ? '' : 'ões'} com alteração de Dependency IF em rascunho.`
+        })
+      }, true)
+    })
+  }
+
+  function bindModuleTabs(){
+    document.querySelectorAll('.editor-module-tab').forEach(tab=>{
+      if(tab.dataset.moduleBound === '1') return
+      tab.dataset.moduleBound = '1'
+      tab.addEventListener('click', ()=>{
+        const target = tab.dataset.moduleTarget
+        document.querySelectorAll('.editor-module-tab').forEach(t=>t.classList.toggle('active', t === tab))
+        document.querySelectorAll('.editor-module-panel').forEach(panel=>panel.classList.remove('active'))
+        if(target === 'questions'){
+          $('moduleQuestionsPanel')?.classList.add('active')
+          $('moduleAfterBulkQuestionsPanel')?.classList.add('active')
+        }else{
+          $('moduleBulkDependencyPanel')?.classList.add('active')
+        }
+      })
+    })
+  }
+
+  function openBQModal(){
+    const drafts = window.SDU_DRAFT_CHANGES || []
+    if(!drafts.length){
+      const status = $('builderStatus')
+      if(status){
+        status.textContent = 'Não há alterações em rascunho para enviar ao BigQuery.'
+        status.className = 'builder-status error'
+      }
+      return
+    }
+    $('bqStatNew').textContent = drafts.filter(d=>d.type==='new').length
+    $('bqStatEdited').textContent = drafts.filter(d=>d.type==='edited').length
+    $('bqStatDisabled').textContent = drafts.filter(d=>d.type==='disabled').length
+    $('bqStatBulk').textContent = drafts.filter(d=>d.type==='bulk_dependency').length
+    $('bqReviewList').innerHTML = drafts.map(d=>`
+      <div class="draft-item">
+        <div class="draft-item-top">
+          <span class="draft-item-qid">${escapeLocal(d.qid || d.title || 'Alteração')}</span>
+          <span class="draft-badge ${escapeLocal(d.type)}">${escapeLocal(badgeLabel(d.type))}</span>
+        </div>
+        <div class="draft-item-desc">${escapeLocal(d.description || d.questionText || d.summary || '')}</div>
+      </div>
+    `).join('')
+    $('bqConfirmInput').value = ''
+    $('btnConfirmSendBQ').disabled = true
+    $('bqConfirmModal').classList.add('open')
+  }
+
+  function bindBQModal(){
+    $('btnOpenBQConfirm')?.addEventListener('click', openBQModal)
+    $('btnCancelBQConfirm')?.addEventListener('click', ()=>$('bqConfirmModal')?.classList.remove('open'))
+    $('bqConfirmInput')?.addEventListener('input', e=>{
+      $('btnConfirmSendBQ').disabled = e.target.value !== 'CONFIRMAR'
+    })
+    $('btnConfirmSendBQ')?.addEventListener('click', ()=>{
+      if(($('bqConfirmInput')?.value || '') !== 'CONFIRMAR') return
+      console.log('[Gerador] Envio final para BigQuery:', window.SDU_DRAFT_CHANGES)
+      $('bqConfirmModal')?.classList.remove('open')
+      window.SDU_DRAFT_CHANGES = []
+      renderDraftSummary()
+      const status = $('builderStatus')
+      if(status){
+        status.textContent = 'Alterações confirmadas para envio ao BigQuery.'
+        status.className = 'builder-status success'
+      }
+    })
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    bindModuleTabs()
+    bindBQModal()
+    patchButtons()
+    renderDraftSummary()
+  })
+
+  document.addEventListener('click', ()=>{
+    setTimeout(()=>{bindModuleTabs(); patchButtons(); renderDraftSummary()}, 50)
+  }, true)
+})()
+</script>
+
+
+<script>
+/* V27.29 - Correção definitiva da navegação dos módulos do Editor Online */
+(function(){
+  function activateEditorModule(target){
+    document.querySelectorAll('.editor-module-tab').forEach(tab=>{
+      tab.classList.toggle('active', tab.dataset.moduleTarget === target)
+    })
+
+    document.querySelectorAll('.editor-module-panel').forEach(panel=>{
+      panel.classList.remove('active')
+      panel.style.display = 'none'
+    })
+
+    document.body.classList.remove('questions-mode','bulk-dependency-mode')
+
+    if(target === 'bulkDependency'){
+      document.body.classList.add('bulk-dependency-mode')
+      const bulk = document.getElementById('moduleBulkDependencyPanel')
+      if(bulk){
+        bulk.classList.add('active')
+        bulk.style.display = 'block'
+      }
+    }else{
+      document.body.classList.add('questions-mode')
+      const q1 = document.getElementById('moduleQuestionsPanel')
+      const q2 = document.getElementById('moduleAfterBulkQuestionsPanel')
+      if(q1){
+        q1.classList.add('active')
+        q1.style.display = 'block'
+      }
+      if(q2){
+        q2.classList.add('active')
+        q2.style.display = 'block'
+      }
+    }
+  }
+
+  function bindEditorModuleTabs(){
+    document.querySelectorAll('.editor-module-tab').forEach(tab=>{
+      if(tab.dataset.v292Bound === '1') return
+      tab.dataset.v292Bound = '1'
+      tab.addEventListener('click', function(e){
+        e.preventDefault()
+        e.stopPropagation()
+        activateEditorModule(tab.dataset.moduleTarget || 'questions')
+      }, true)
+    })
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    bindEditorModuleTabs()
+    activateEditorModule('questions')
+  })
+
+  document.addEventListener('click', ()=>{
+    setTimeout(bindEditorModuleTabs, 30)
+  }, true)
+
+  window.activateEditorModule = activateEditorModule
+})()
+</script>
+
+
+<script>
+/* V27.30 - Renderização forçada da aba Dependências em massa */
+(function(){
+  function $(id){ return document.getElementById(id) }
+
+  function getQuestionsSafe(){
+    try{
+      if(typeof generatorQuestions !== 'undefined' && Array.isArray(generatorQuestions)) return generatorQuestions
+    }catch(e){}
+    return []
+  }
+
+  function getStateSafe(){
+    try{
+      if(typeof generatorState !== 'undefined') return generatorState
+    }catch(e){}
+    return null
+  }
+
+  function refreshForcedBulkQuestions(){
+    const select = $('forcedBulkQuestion')
+    if(!select) return
+
+    const state = getStateSafe()
+    const questions = getQuestionsSafe()
+    const toolkit = state?.toolkit || ''
+    const currentQid = $('fieldQid')?.value || ''
+
+    let items = toolkit ? questions.filter(q=>q.toolkit === toolkit) : questions
+    items = items
+      .filter(q=>q.qid && q.qid !== currentQid)
+      .slice()
+      .sort((a,b)=>{
+        const aNew = a.status === 'new' || a.isNew
+        const bNew = b.status === 'new' || b.isNew
+        if(aNew !== bNew) return aNew ? -1 : 1
+        return String(a.qid || '').localeCompare(String(b.qid || ''))
+      })
+
+    select.innerHTML = '<option value="">Selecione a pergunta...</option>' + items.map(q=>{
+      const isNew = q.status === 'new' || q.isNew
+      const label = `${isNew ? 'NEW - ' : ''}${q.qid} - ${q.topic || q.text || ''}`
+      return `<option value="${String(q.qid).replaceAll('"','&quot;')}">${label.replaceAll('<','&lt;').replaceAll('>','&gt;')}</option>`
+    }).join('')
+
+    updateForcedBulkSummary()
+  }
+
+  function updateForcedBulkSummary(){
+    const q = $('forcedBulkQuestion')?.value || ''
+    const op = $('forcedBulkOperator')?.value || 'igual'
+    const value = $('forcedBulkValue')?.value || ''
+    const label = {igual:'=', diferente:'!=', maior:'>', menor:'<'}[op] || '='
+    const summary = $('forcedBulkSummary')
+    if(summary) summary.value = q ? `${q} ${label} ${value || '[valor]'}` : ''
+  }
+
+  function forcedBulkApply(replaceExisting){
+    const state = getStateSafe()
+    const questions = getQuestionsSafe()
+    if(!state || !questions.length) return
+
+    const selected = [...(state.selectedQuestionIds || new Set())]
+    if(!selected.length){
+      if(typeof setBuilderStatus === 'function') setBuilderStatus('Selecione uma ou mais questões na biblioteca antes de aplicar a dependência em massa.','error')
+      else alert('Selecione uma ou mais questões na biblioteca.')
+      return
+    }
+
+    const field = $('forcedBulkQuestion')?.value || ''
+    const operator = $('forcedBulkOperator')?.value || 'igual'
+    const value = $('forcedBulkValue')?.value || ''
+    if(!field || !value){
+      if(typeof setBuilderStatus === 'function') setBuilderStatus('Preencha pergunta base e valor esperado antes de aplicar.','error')
+      else alert('Preencha pergunta base e valor esperado.')
+      return
+    }
+
+    const newRule = {field, operator, value, connector:null}
+    let updated = 0
+
+    try{
+      generatorQuestions = questions.map(q=>{
+        if(!selected.includes(q.qid)) return q
+        updated++
+        const current = Array.isArray(q.dependencyRules) ? q.dependencyRules : []
+        return {
+          ...q,
+          dependencyRules: replaceExisting ? [newRule] : [...current, {...newRule, connector:current.length ? 'E' : null}],
+          status: q.status === 'new' ? 'new' : 'bulk_dependency'
+        }
+      })
+    }catch(e){
+      console.warn('[Gerador] Falha ao atualizar dependency em massa:', e)
+    }
+
+    if(typeof window.addDraftChange === 'function'){
+      window.addDraftChange({
+        type:'bulk_dependency',
+        key:`bulk_dependency_forced_${Date.now()}`,
+        title:'Dependency IF em massa',
+        description:`${updated} questão${updated === 1 ? '' : 'ões'} atualizada${updated === 1 ? '' : 's'} com ${field}.`
+      })
+    }
+
+    if(typeof renderLibrary === 'function') renderLibrary()
+    if(typeof renderRules === 'function') renderRules('dependency')
+    if(typeof updateBulkSelectionUI === 'function') updateBulkSelectionUI()
+    if(typeof setBuilderStatus === 'function') setBuilderStatus(`${updated} questão${updated === 1 ? '' : 'ões'} atualizada${updated === 1 ? '' : 's'} em rascunho.`, 'success')
+  }
+
+  function bindForcedBulk(){
+    $('forcedBulkQuestion')?.addEventListener('change', updateForcedBulkSummary)
+    $('forcedBulkOperator')?.addEventListener('change', updateForcedBulkSummary)
+    $('forcedBulkValue')?.addEventListener('input', updateForcedBulkSummary)
+    $('forcedBulkRefresh')?.addEventListener('click', refreshForcedBulkQuestions)
+    $('forcedBulkApply')?.addEventListener('click', ()=>forcedBulkApply(false))
+    $('forcedBulkReplace')?.addEventListener('click', ()=>forcedBulkApply(true))
+
+    document.querySelectorAll('.editor-module-tab').forEach(tab=>{
+      if(tab.dataset.v30ForcedBound === '1') return
+      tab.dataset.v30ForcedBound = '1'
+      tab.addEventListener('click', ()=>{
+        if(tab.dataset.moduleTarget === 'bulkDependency'){
+          setTimeout(refreshForcedBulkQuestions, 80)
+        }
+      }, true)
+    })
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    bindForcedBulk()
+    refreshForcedBulkQuestions()
+  })
+
+  document.addEventListener('click', ()=>{
+    setTimeout(()=>{bindForcedBulk(); if(document.body.classList.contains('bulk-dependency-mode')) refreshForcedBulkQuestions()}, 80)
+  }, true)
+
+  window.refreshForcedBulkQuestions = refreshForcedBulkQuestions
+})()
 </script>
 
 </body>
