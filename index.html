@@ -1734,6 +1734,113 @@ body.source-gerador .landing{display:none!important}
   height:15px;
 }
 
+
+/* V27.17 - Correção real dos filtros, seleção em massa, toolkit buscável e export Excel */
+.toolbar-toolkit{
+  flex-wrap:wrap;
+}
+.toolkit-search-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+  max-width:420px;
+  margin-left:auto;
+}
+.toolkit-search-wrap input{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:9px 14px;
+  font-size:14px;
+  font-family:inherit;
+  outline:none;
+}
+.toolkit-search-wrap input:focus{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px rgba(245,196,0,.16);
+}
+.library-filters{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.library-filter-select{
+  width:100%;
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:13px;
+  font-family:inherit;
+  outline:none;
+}
+.library-filter-select:focus{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px rgba(245,196,0,.16);
+}
+.library-bulk-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.library-bulk-count{
+  font-size:12px;
+  color:var(--muted);
+}
+.library-bulk-clear{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  cursor:pointer;
+}
+.library-item{
+  grid-template-columns:auto 1fr;
+  align-items:start;
+}
+.library-item-check{
+  margin-top:2px;
+  width:18px;
+  height:18px;
+  accent-color:var(--yellow);
+  cursor:pointer;
+}
+.library-item-body{
+  min-width:0;
+}
+.library-item.selected{
+  background:#fff8d1;
+  border-color:var(--yellow);
+}
+.bulk-dependency-panel{
+  display:block;
+  border:1px dashed var(--yellow);
+  background:#fffdf0;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:10px;
+}
+.bulk-dependency-title{
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:4px;
+}
+.bulk-dependency-help{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.45;
+  margin-bottom:10px;
+}
+.bulk-dependency-controls{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1891,6 +1998,9 @@ body.source-gerador .landing{display:none!important}
       </div>
       <div class="toolbar-toolkit">
         <span class="toolbar-toolkit-label">Toolkit:</span>
+        <div class="toolkit-search-wrap">
+          <input id="toolbarToolkitSearch" type="text" placeholder="Buscar toolkit..." autocomplete="off" />
+        </div>
         <select id="toolbarToolkit" class="toolbar-toolkit-select">
           <option value="">Selecione um toolkit...</option>
         </select>
@@ -3111,6 +3221,19 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     function currentQuestionType(){return document.getElementById('fieldQuestionType')?.value || ''}
     function configForType(type){return QUESTION_TYPE_CONFIG[type] || {responsesLocked:true,defaultResponses:[],operators:[],connectors:false,lockedExpected:true}}
 
+
+    function filterToolkitOptions(){
+      const searchEl = document.getElementById('toolbarToolkitSearch')
+      const selectEl = document.getElementById('toolbarToolkit')
+      if(!searchEl || !selectEl) return
+      const term = (searchEl.value || '').toLowerCase().trim()
+      Array.from(selectEl.options).forEach(opt=>{
+        if(!opt.value){ opt.hidden = false; return }
+        const hay = `${opt.textContent || ''} ${opt.value || ''}`.toLowerCase()
+        opt.hidden = !!term && !hay.includes(term)
+      })
+    }
+
     function initGenerator(){
       if(generatorState.initialized){syncGeneratorMenus(); setGeneratorMode('editar'); loadGeneratorContentFromWebhook(); return}
       generatorState.initialized = true
@@ -3122,6 +3245,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       const fieldToolkit = document.getElementById('fieldToolkit')
       toolbarToolkit.addEventListener('change',()=>setToolkit(toolbarToolkit.value))
       fieldToolkit.addEventListener('change',()=>setToolkit(fieldToolkit.value))
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('input', filterToolkitOptions)
 
       document.getElementById('fieldQid').addEventListener('input', updateIdFinal)
       document.getElementById('fieldPillar').addEventListener('change',()=>{populateTopicOptions(); renderRules('dependency')})
@@ -3195,6 +3319,10 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       document.getElementById('fieldToolkit').value = toolkit
       populatePillarOptions()
       populateTopicOptions()
+      document.getElementById('libraryFilterPillar') && (document.getElementById('libraryFilterPillar').value = '')
+      document.getElementById('libraryFilterTopic') && (document.getElementById('libraryFilterTopic').value = '')
+      document.getElementById('libraryFilterQuestionClass') && (document.getElementById('libraryFilterQuestionClass').value = '')
+      populateLibraryFilters()
       updateIdFinal()
       renderLibrary(generatorState.mode === 'novo')
       renderRules('dependency')
@@ -3206,6 +3334,8 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       document.getElementById('fieldToolkit').innerHTML = options.replace('Selecione um toolkit...', 'Selecione...')
       populatePillarOptions()
       populateTopicOptions()
+      populateLibraryFilters()
+      filterToolkitOptions()
     }
     function selectDefaultToolkit(){
       const toolkits = uniqueBy(generatorQuestions, q=>q.toolkit).map(q=>q.toolkit)
@@ -3227,41 +3357,151 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       const tk = document.getElementById('fieldToolkit').value.trim()
       document.getElementById('fieldIdFinal').value = (qid && tk) ? `${qid}_${tk}` : ''
     }
+
+    function populateSelectOptions(selectId, values, firstLabel, keepCurrent=true){
+      const el = document.getElementById(selectId)
+      if(!el) return
+      const current = keepCurrent ? el.value : ''
+      const options = [`<option value="">${escapeHtml(firstLabel)}</option>`]
+      values.filter(Boolean).forEach(v=>{
+        options.push(`<option value="${escapeHtml(v)}" ${v === current ? 'selected' : ''}>${escapeHtml(v)}</option>`)
+      })
+      el.innerHTML = options.join('')
+      if(current && values.includes(current)) el.value = current
+    }
+
+    function populateLibraryFilters(){
+      const tk = generatorState.toolkit
+      const base = tk ? questionsForToolkit(tk) : []
+
+      const currentPillar = document.getElementById('libraryFilterPillar')?.value || ''
+      const currentTopic = document.getElementById('libraryFilterTopic')?.value || ''
+
+      const pillars = uniqueBy(base, q=>q.pillar).map(q=>q.pillar).sort((a,b)=>a.localeCompare(b))
+      populateSelectOptions('libraryFilterPillar', pillars, 'Todos os Pillars')
+
+      const topicBase = currentPillar ? base.filter(q=>q.pillar === currentPillar) : base
+      const topics = uniqueBy(topicBase, q=>q.topic).map(q=>q.topic).sort((a,b)=>a.localeCompare(b))
+      populateSelectOptions('libraryFilterTopic', topics, 'Todos os Topics')
+
+      const classBase = currentTopic ? topicBase.filter(q=>q.topic === currentTopic) : topicBase
+      const classes = uniqueBy(classBase, q=>q.questionClass).map(q=>q.questionClass).sort((a,b)=>a.localeCompare(b))
+      populateSelectOptions('libraryFilterQuestionClass', classes, 'Todas as Question Classes')
+    }
+
+    function updateBulkSelectionUI(){
+      const count = generatorState.selectedQuestionIds ? generatorState.selectedQuestionIds.size : 0
+      const el = document.getElementById('libraryBulkCount')
+      if(el) el.textContent = `${count} selecionada${count === 1 ? '' : 's'} para edição em massa`
+      const panel = document.getElementById('bulkDependencyPanel')
+      if(panel) panel.style.opacity = count ? '1' : '.72'
+    }
+
+    function toggleQuestionSelection(qid, checked){
+      if(!generatorState.selectedQuestionIds) generatorState.selectedQuestionIds = new Set()
+      if(checked) generatorState.selectedQuestionIds.add(qid)
+      else generatorState.selectedQuestionIds.delete(qid)
+      renderLibrary()
+      updateBulkSelectionUI()
+    }
+
     function renderLibrary(forceBlank=false){
       const list = document.getElementById('libraryList')
       const countEl = document.getElementById('libraryCount')
       if(forceBlank || generatorState.mode === 'novo'){
-        list.innerHTML = '<div class="library-empty">ConstruÃ§Ã£o do zero ativa. Nenhuma questão da biblioteca estÃ¡ selecionada.</div>'
+        list.innerHTML = '<div class="library-empty">Construção do zero ativa. Nenhuma questão da biblioteca está selecionada.</div>'
         countEl.textContent = '0'
+        updateBulkSelectionUI()
         return
       }
       if(generatorState.loading){
         list.innerHTML = '<div class="library-empty">Carregando conteúdo vigente do BigQuery...</div>'
         countEl.textContent = '0'
+        updateBulkSelectionUI()
         return
       }
       const tk = generatorState.toolkit
-      const search = (document.getElementById('librarySearch').value || '').toLowerCase().trim()
+      const search = (document.getElementById('librarySearch')?.value || '').toLowerCase().trim()
+      const filterPillar = document.getElementById('libraryFilterPillar')?.value || ''
+      const filterTopic = document.getElementById('libraryFilterTopic')?.value || ''
+      const filterQuestionClass = document.getElementById('libraryFilterQuestionClass')?.value || ''
+
       if(!generatorQuestions.length){
         list.innerHTML = '<div class="library-empty">Nenhum conteúdo real do BigQuery foi carregado para o Gerador.</div>'
         countEl.textContent = '0'
+        updateBulkSelectionUI()
         return
       }
       if(!tk){
         list.innerHTML = '<div class="library-empty">Selecione um toolkit carregado do BigQuery.</div>'
         countEl.textContent = '0'
+        updateBulkSelectionUI()
         return
       }
-      const items = questionsForToolkit(tk).filter(q=>!search || [q.qid,q.pillar,q.topic,q.text].join(' ').toLowerCase().includes(search))
+
+      let items = questionsForToolkit(tk)
+
+      if(filterPillar) items = items.filter(q=>q.pillar === filterPillar)
+      if(filterTopic) items = items.filter(q=>q.topic === filterTopic)
+      if(filterQuestionClass) items = items.filter(q=>q.questionClass === filterQuestionClass)
+
+      if(search){
+        items = items.filter(q=>[
+          q.qid,
+          q.pillar,
+          q.topic,
+          q.questionClass,
+          q.text,
+          q.toolkit,
+          q.toolkitLabel
+        ].join(' ').toLowerCase().includes(search))
+      }
+
       countEl.textContent = String(items.length)
-      if(!items.length){list.innerHTML = '<div class="library-empty">Nenhuma questão encontrada para os filtros aplicados.</div>'; return}
-      list.innerHTML = items.map(q=>`
-        <div class="library-item ${generatorState.activeQuestionId===q.qid?'active':''}" data-qid="${escapeHtml(q.qid)}">
-          <div class="library-item-top"><span class="library-item-qid">${escapeHtml(q.qid)}</span><span class="library-pill ${escapeHtml(q.status)}">${escapeHtml(q.status)}</span></div>
-          <div class="library-item-text">${escapeHtml(q.text)}</div>
-          <div class="library-item-meta"><span>${escapeHtml(q.pillar)}</span><span>Â·</span><span>${escapeHtml(q.topic)}</span></div>
-        </div>`).join('')
-      list.querySelectorAll('.library-item').forEach(item=>item.addEventListener('click',()=>loadQuestion(item.dataset.qid)))
+
+      if(!items.length){
+        list.innerHTML = '<div class="library-empty">Nenhuma questão encontrada para os filtros aplicados.</div>'
+        updateBulkSelectionUI()
+        return
+      }
+
+      list.innerHTML = items.map(q=>{
+        const checked = generatorState.selectedQuestionIds.has(q.qid) ? 'checked' : ''
+        const selected = generatorState.selectedQuestionIds.has(q.qid) ? 'selected' : ''
+        return `
+        <div class="library-item ${selected} ${generatorState.activeQuestionId===q.qid?'active':''}" data-qid="${escapeHtml(q.qid)}">
+          <input class="library-item-check" type="checkbox" data-qid="${escapeHtml(q.qid)}" ${checked} aria-label="Selecionar questão ${escapeHtml(q.qid)}" />
+          <div class="library-item-body">
+            <div class="library-item-top">
+              <span class="library-item-qid">${escapeHtml(q.qid)}</span>
+              <span class="library-pill ${escapeHtml(q.status)}">${escapeHtml(q.status)}</span>
+            </div>
+            <div class="library-item-text">${escapeHtml(q.text)}</div>
+            <div class="library-item-meta">
+              <span>${escapeHtml(q.pillar || '-')}</span>
+              <span>·</span>
+              <span>${escapeHtml(q.topic || '-')}</span>
+              ${q.questionClass ? `<span>·</span><span>${escapeHtml(q.questionClass)}</span>` : ''}
+            </div>
+          </div>
+        </div>`
+      }).join('')
+
+      list.querySelectorAll('.library-item-check').forEach(check=>{
+        check.addEventListener('click', e=>{
+          e.stopPropagation()
+          toggleQuestionSelection(check.dataset.qid, check.checked)
+        })
+      })
+
+      list.querySelectorAll('.library-item').forEach(item=>{
+        item.addEventListener('click', e=>{
+          if(e.target.closest('.library-item-check')) return
+          loadQuestion(item.dataset.qid)
+        })
+      })
+
+      updateBulkSelectionUI()
     }
     function loadQuestion(qid){
       const data = findQuestion(qid)
@@ -3423,6 +3663,46 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       console.log('[Gerador] Dependency IF aplicada em massa:', {selected, replaceExisting, rules:newRules})
     }
 
+
+    function getSelectedOrFilteredQuestionsForExport(){
+      const selected = [...(generatorState.selectedQuestionIds || new Set())]
+      if(selected.length) return generatorQuestions.filter(q=>selected.includes(q.qid))
+
+      const tk = generatorState.toolkit
+      const search = (document.getElementById('librarySearch')?.value || '').toLowerCase().trim()
+      const filterPillar = document.getElementById('libraryFilterPillar')?.value || ''
+      const filterTopic = document.getElementById('libraryFilterTopic')?.value || ''
+      const filterQuestionClass = document.getElementById('libraryFilterQuestionClass')?.value || ''
+
+      let items = tk ? questionsForToolkit(tk) : generatorQuestions
+      if(filterPillar) items = items.filter(q=>q.pillar === filterPillar)
+      if(filterTopic) items = items.filter(q=>q.topic === filterTopic)
+      if(filterQuestionClass) items = items.filter(q=>q.questionClass === filterQuestionClass)
+      if(search){
+        items = items.filter(q=>[q.qid,q.pillar,q.topic,q.questionClass,q.text,q.toolkit,q.toolkitLabel].join(' ').toLowerCase().includes(search))
+      }
+      return items
+    }
+
+    window.getGeneratorExcelRows = function(){
+      return getSelectedOrFilteredQuestionsForExport().map(q=>({
+        "Q ID": q.qid || "",
+        "PILLAR NAME": q.pillar || "",
+        "TOPIC NAME": q.topic || "",
+        "QUESTION TEXT": q.text || "",
+        "TAXONOMY": q.taxonomy || "",
+        "DEPENDENCY IF": Array.isArray(q.dependencyRules) ? JSON.stringify(q.dependencyRules) : (q.dependencyRules || ""),
+        "QUESTION TYPE": q.questionType || "",
+        "POSSIBLE RESPONSES": Array.isArray(q.possibleResponses) ? q.possibleResponses.join(" | ") : (q.possibleResponses || ""),
+        "EXPECTED ANSWER": Array.isArray(q.expectedRules) ? JSON.stringify(q.expectedRules) : (q.expectedRules || ""),
+        "QUESTION CLASS": q.questionClass || "",
+        "RECOMMENDATION": q.recommendation || "",
+        "STRONG POINT": q.strongPoint || "",
+        "WEAK POINT": q.weakPoint || "",
+        "TOOLTIP": q.tooltip || ""
+      }))
+    }
+
     function handleSave(applyImmediately){
       const qid = document.getElementById('fieldQid').value.trim()
       const tk = document.getElementById('fieldToolkit').value.trim()
@@ -3516,5 +3796,37 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='flex'
     renderHistory()
   </script>
+<script>
+/* V27.17 - Exportação Excel corrigida */
+document.addEventListener('DOMContentLoaded', () => {
+  const exportBtn = document.getElementById('exportExcelBtn')
+  if(!exportBtn) return
+
+  exportBtn.addEventListener('click', () => {
+    if(typeof XLSX === 'undefined'){
+      alert('Biblioteca de exportação Excel não carregou. Verifique a conexão com a internet ou hospede o SheetJS localmente.')
+      return
+    }
+
+    const rows = typeof window.getGeneratorExcelRows === 'function'
+      ? window.getGeneratorExcelRows()
+      : []
+
+    if(!rows.length){
+      alert('Nenhuma questão disponível para exportação.')
+      return
+    }
+
+    const workbook = XLSX.utils.book_new()
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'QUESTIONS')
+
+    const date = new Date()
+    const filename = `Conteudo_Export_${date.getFullYear()}_${String(date.getMonth()+1).padStart(2,'0')}_${String(date.getDate()).padStart(2,'0')}.xlsx`
+
+    XLSX.writeFile(workbook, filename)
+  })
+})
+</script>
 </body>
 </html>
