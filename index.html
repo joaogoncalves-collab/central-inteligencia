@@ -1333,6 +1333,10 @@ body.source-gerador .landing{display:none!important}
   transition:.14s;
 }
 .responses-wrap:focus-within{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(245,196,0,.16)}
+.responses-wrap.disabled{background:#fafafa;color:#6b7280;cursor:not-allowed}
+.responses-wrap.disabled .responses-input{display:none}
+.builder-input:disabled,.builder-select:disabled,.builder-textarea:disabled{background:#f3f4f6;color:#6b7280;cursor:not-allowed;box-shadow:none}
+.rule-add:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none!important;background:#f3f4f6;border-color:#e5e7eb;color:#9ca3af}
 .response-chip{
   display:inline-flex;
   align-items:center;
@@ -1800,13 +1804,7 @@ body.source-gerador .landing{display:none!important}
       <div class="toolbar-toolkit">
         <span class="toolbar-toolkit-label">Toolkit:</span>
         <select id="toolbarToolkit" class="toolbar-toolkit-select">
-          <option value="">Selecione um toolkit…</option>
-          <option value="laranja_cocacola">Laranja - Coca-Cola</option>
-          <option value="cafe_jde">Café - JDE</option>
-          <option value="cacau_cargill">Cacau - Cargill</option>
-          <option value="cana_raizen">Cana - Raízen</option>
-          <option value="soja_ifc">Soja - IFC</option>
-          <option value="leite_danone">Leite - Danone</option>
+          <option value="">Selecione um toolkit...</option>
         </select>
       </div>
     </div>
@@ -1856,13 +1854,7 @@ body.source-gerador .landing{display:none!important}
                   <span class="builder-tooltip" data-tip="Toolkit ao qual esta questão pertence. Lista carregada dinamicamente do BigQuery.">i</span>
                 </label>
                 <select id="fieldToolkit" class="builder-select">
-                  <option value="">Selecione…</option>
-                  <option value="laranja_cocacola">Laranja - Coca-Cola</option>
-                  <option value="cafe_jde">Café - JDE</option>
-                  <option value="cacau_cargill">Cacau - Cargill</option>
-                  <option value="cana_raizen">Cana - Raízen</option>
-                  <option value="soja_ifc">Soja - IFC</option>
-                  <option value="leite_danone">Leite - Danone</option>
+                  <option value="">Selecione...</option>
                 </select>
               </div>
               <div class="builder-field">
@@ -1891,18 +1883,16 @@ body.source-gerador .landing{display:none!important}
                   <span class="builder-tooltip" data-tip="Pilar temático ao qual a questão pertence (ex.: Ambiental, Social, Econômico).">i</span>
                 </label>
                 <select id="fieldPillar" class="builder-select">
-                  <option value="">Selecione…</option>
-                  <option>Ambiental</option>
-                  <option>Social</option>
-                  <option>Econômico</option>
-                  <option>Governança</option>
+                  <option value="">Selecione...</option>
                 </select>
               </div>
               <div class="builder-field">
                 <label class="builder-field-label" for="fieldTopic">Topic
                   <span class="builder-tooltip" data-tip="Tópico específico dentro do pilar selecionado.">i</span>
                 </label>
-                <input id="fieldTopic" class="builder-input" type="text" placeholder="Ex.: Armazenamento de combustíveis" />
+                <select id="fieldTopic" class="builder-select">
+                  <option value="">Selecione...</option>
+                </select>
               </div>
             </div>
             <div class="builder-field">
@@ -1930,14 +1920,12 @@ body.source-gerador .landing{display:none!important}
                   <span class="builder-tooltip" data-tip="Tipo de resposta esperada: única, múltipla, texto, numérica, imagem ou documento.">i</span>
                 </label>
                 <select id="fieldQuestionType" class="builder-select">
-                  <option value="">Selecione…</option>
-                  <option value="unica">Resposta única</option>
-                  <option value="multipla">Múltipla escolha</option>
-                  <option value="texto">Texto livre</option>
-                  <option value="numerica">Numérica</option>
-                  <option value="imagem">Imagem</option>
-                  <option value="documento">Documento</option>
-                  <option value="sim_nao">Sim / Não</option>
+                  <option value="">Selecione...</option>
+                  <option value="Adherence">Adherence</option>
+                  <option value="Multiple">Multiple</option>
+                  <option value="Number">Number</option>
+                  <option value="Text">Text</option>
+                  <option value="Unique">Unique</option>
                 </select>
               </div>
               <div class="builder-field">
@@ -2149,6 +2137,7 @@ body.source-gerador .landing{display:none!important}
     const WEBHOOK_DADOS_URL='https://joaogoncalves.app.n8n.cloud/webhook/pergunta'
     const WEBHOOK_PUBLICACOES_URL='https://joaogoncalves.app.n8n.cloud/webhook/publicacoes'
     const WEBHOOK_AVALIACAO_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia'
+    const WEBHOOK_GERADOR_URL='https://joaogoncalves.app.n8n.cloud/webhook/gerador-conteudo'
     const HISTORY_KEY='central_inteligente_conversas_v10'
     const home=document.getElementById('home'),chat=document.getElementById('chat'),mapping=document.getElementById('mapping'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
     let mode='resposta',sourceConsulta='dados',currentConversation=null
@@ -2185,7 +2174,7 @@ body.source-gerador .landing{display:none!important}
       updateSuggestions()
     }
 
-    function openEnvironment(source){
+    function openEnvironment(source, pushState=true){
       setSource(source)
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='none'
@@ -2200,6 +2189,7 @@ body.source-gerador .landing{display:none!important}
         if(generatorEl){generatorEl.classList.remove('active');generatorEl.style.display='none'}
         mapping.classList.add('active')
         mapping.style.display='flex'
+        if(pushState) history.pushState({sduSource:'mapeamento'}, '', '#mapeamento')
         return
       }
 
@@ -2213,6 +2203,7 @@ body.source-gerador .landing{display:none!important}
           generatorEl.style.display='flex'
         }
         if(typeof initGenerator === 'function') initGenerator()
+        if(pushState) history.pushState({sduSource:'gerador'}, '', '#gerador')
         return
       }
 
@@ -2223,9 +2214,10 @@ body.source-gerador .landing{display:none!important}
       home.style.display='flex'
       homeQuestion.value=''
       setTimeout(()=>homeQuestion.focus(),50)
+      if(pushState) history.pushState({sduSource:sourceConsulta}, '', '#' + sourceConsulta)
     }
 
-    function backToLanding(){
+    function backToLanding(pushState=false){
       currentConversation=null
       messages.innerHTML=''
       chat.classList.remove('active')
@@ -2236,9 +2228,11 @@ body.source-gerador .landing{display:none!important}
       mapping.style.display='none'
       const generatorEl = document.getElementById('generator')
       if(generatorEl){generatorEl.classList.remove('active');generatorEl.style.display='none'}
-      document.body.classList.remove('source-gerador')
+      document.body.classList.remove('source-dados','source-publicacoes','source-mapeamento','source-gerador')
+      sourceConsulta='dados'
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='flex'
+      if(pushState) history.pushState({sduSource:'landing'}, '', location.pathname + location.search)
     }
 
     function updateSuggestions(){
@@ -2807,441 +2801,407 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         statusEl.className = 'mapping-status error'
       }
     }
-
-
     /* ===================================================================
-       V27.14 - Lógica do Gerador de Conteúdo
+       V27.15 - Logica do Gerador de Conteudo conectada ao conteudo real
        =================================================================== */
-    let generatorState = {
-      mode:'editar',
-      toolkit:'',
-      possibleResponses:[],
-      expectedRules:[],
-      dependencyRules:[],
-      activeQuestionId:null,
-      initialized:false
+    const QUESTION_TYPE_CONFIG = {
+      Adherence:{responsesLocked:true,defaultResponses:['Sim','Não'],operators:['igual','diferente'],connectors:false,lockedExpected:false},
+      Multiple:{responsesLocked:false,defaultResponses:[],operators:['igual','diferente'],connectors:true,lockedExpected:false},
+      Number:{responsesLocked:true,defaultResponses:[],operators:['maior','igual','menor','diferente'],connectors:false,lockedExpected:false},
+      Text:{responsesLocked:true,defaultResponses:[],operators:[],connectors:false,lockedExpected:true},
+      Unique:{responsesLocked:false,defaultResponses:[],operators:['igual','diferente'],connectors:true,lockedExpected:false}
     }
-
-    /* Mock da biblioteca - na produção será substituído por fetch ao BigQuery */
-    const GENERATOR_LIBRARY_MOCK = {
-      laranja_cocacola:[
-        {qid:'Q1971',pillar:'Ambiental',topic:'Armazenamento',text:'Como são os tanques ou tambores de armazenamento de combustíveis e lubrificantes?',status:'ativo'},
-        {qid:'Q1972',pillar:'Ambiental',topic:'Resíduos',text:'A propriedade possui plano de gestão de resíduos sólidos?',status:'ativo'},
-        {qid:'Q1973',pillar:'Social',topic:'Saúde e Segurança',text:'Os trabalhadores recebem EPIs adequados para manuseio de defensivos?',status:'ativo'},
-        {qid:'Q1974',pillar:'Ambiental',topic:'Recursos hídricos',text:'Há captação de água outorgada pelo órgão ambiental competente?',status:'rascunho'},
-        {qid:'Q1975',pillar:'Social',topic:'Trabalho',text:'Existe contrato formal de trabalho para todos os colaboradores?',status:'ativo'},
-        {qid:'Q1976',pillar:'Econômico',topic:'Gestão',text:'A propriedade mantém registros financeiros atualizados?',status:'ativo'},
-        {qid:'Q1977',pillar:'Ambiental',topic:'Biodiversidade',text:'Há áreas de preservação permanente (APP) preservadas na propriedade?',status:'ativo'},
-        {qid:'Q1978',pillar:'Governança',topic:'Documentação',text:'O CAR (Cadastro Ambiental Rural) está regularizado?',status:'ativo'},
-        {qid:'Q1979',pillar:'Social',topic:'Capacitação',text:'Há programa de treinamento contínuo para os trabalhadores?',status:'arquivado'},
-      ],
-      cafe_jde:[
-        {qid:'Q2101',pillar:'Ambiental',topic:'Solo',text:'Há análise de solo realizada nos últimos 24 meses?',status:'ativo'},
-        {qid:'Q2102',pillar:'Ambiental',topic:'Defensivos',text:'Os defensivos utilizados são registrados no MAPA?',status:'ativo'},
-        {qid:'Q2103',pillar:'Social',topic:'Habitação',text:'A moradia dos trabalhadores possui condições mínimas de habitabilidade?',status:'rascunho'},
-      ],
-      cacau_cargill:[
-        {qid:'Q3050',pillar:'Ambiental',topic:'Sombreamento',text:'A produção utiliza sistema agroflorestal ou sombreamento?',status:'ativo'},
-        {qid:'Q3051',pillar:'Ambiental',topic:'Desmatamento',text:'Há registros de desmatamento na propriedade após 2020?',status:'ativo'},
-      ],
-      cana_raizen:[
-        {qid:'Q4001',pillar:'Ambiental',topic:'Queimadas',text:'A propriedade pratica queima controlada para colheita?',status:'arquivado'},
-        {qid:'Q4002',pillar:'Social',topic:'Trabalho',text:'Há contratação de trabalho temporário sazonal?',status:'ativo'},
-      ],
-      soja_ifc:[
-        {qid:'Q5010',pillar:'Ambiental',topic:'Desmatamento',text:'A área plantada respeita o Moratória da Soja?',status:'ativo'},
-      ],
-      leite_danone:[
-        {qid:'Q6020',pillar:'Social',topic:'Bem-estar animal',text:'Os animais têm acesso a água limpa e abrigo permanente?',status:'ativo'},
-      ]
-    }
-
-    const QUESTION_DETAIL_MOCK = {
-      Q1971:{
-        toolkit:'laranja_cocacola',
-        pillar:'Ambiental',
-        topic:'Armazenamento de combustíveis',
-        questionText:'Como são os tanques ou tambores de armazenamento de combustíveis e lubrificantes?',
-        questionType:'unica',
-        possibleResponses:['Suspensos com contenção','No solo sem contenção','Não há armazenamento'],
-        expectedRules:[{field:'self',operator:'igual',value:'Suspensos com contenção',connector:'E'}],
-        dependencyRules:[],
-        recommendation:'Os tanques ou tambores de armazenamento devem ser suspensos ou com estruturas para conter vazamento.',
-        strongPoint:'Boa prática: armazenamento adequado evita contaminação do solo e da água.',
-        weakPoint:'Risco ambiental: armazenamento sem contenção pode causar contaminação do solo e cursos d\'água.',
-        tooltip:'Inclui tanques, tambores e bombonas de combustível e lubrificante.',
-        taxonomy:'Ambiental > Solo > Contaminação > Combustíveis'
+    const RULE_OPERATOR_LABELS = {igual:'IGUAL A',diferente:'DIFERENTE DE',maior:'MAIOR QUE',menor:'MENOR QUE'}
+    let generatorState = {mode:'editar',toolkit:'',possibleResponses:[],expectedRules:[],dependencyRules:[],activeQuestionId:null,initialized:false,loading:false,loaded:false}
+    let generatorQuestions = normalizeBQQuestions(Array.isArray(window.SDU_BQ_QUESTIONS) ? window.SDU_BQ_QUESTIONS : (Array.isArray(window.BIGQUERY_QUESTIONS) ? window.BIGQUERY_QUESTIONS : []))
+    window.setSDUBigQueryQuestions = function(rows){
+      generatorQuestions = normalizeBQQuestions(rows || [])
+      generatorState.loaded = true
+      if(generatorState.initialized){
+        syncGeneratorMenus()
+        if(!generatorState.toolkit) selectDefaultToolkit()
+        renderLibrary(generatorState.mode === 'novo')
+        renderRules('dependency')
       }
     }
 
+    function extractGeneratorRows(payload){
+      if(Array.isArray(payload)){
+        if(payload.length === 1 && payload[0] && typeof payload[0] === 'object'){
+          const nested = extractGeneratorRows(payload[0])
+          if(nested.length) return nested
+        }
+        return payload
+      }
+      if(!payload || typeof payload !== 'object') return []
+      const candidates = [payload.questions,payload.questoes,payload.rows,payload.items,payload.data,payload.result,payload.results,payload.body,payload.content]
+      for(const candidate of candidates){
+        const rows = extractGeneratorRows(candidate)
+        if(rows.length) return rows
+      }
+      for(const value of Object.values(payload)){
+        if(Array.isArray(value)) return value
+      }
+      return []
+    }
+
+    async function loadGeneratorContentFromWebhook(){
+      if(generatorState.loading || generatorState.loaded) return
+      generatorState.loading = true
+      renderLibrary()
+      try{
+        const r = await fetch(WEBHOOK_GERADOR_URL,{method:'GET',headers:{'Accept':'application/json'}})
+        const contentType = r.headers.get('content-type') || ''
+        const raw = contentType.includes('application/json') ? await r.json() : await r.text()
+        if(!r.ok) throw new Error(typeof raw === 'string' ? raw : JSON.stringify(raw))
+        const rows = extractGeneratorRows(raw)
+        generatorQuestions = normalizeBQQuestions(rows)
+        generatorState.loaded = true
+        syncGeneratorMenus()
+        selectDefaultToolkit()
+        renderLibrary(generatorState.mode === 'novo')
+        setBuilderStatus(generatorQuestions.length ? 'Conteúdo vigente carregado do BigQuery.' : 'Webhook retornou sem questões para o Gerador.', generatorQuestions.length ? 'success' : 'error')
+      }catch(e){
+        console.error('[Gerador] Falha ao carregar conteúdo vigente:', e)
+        setBuilderStatus('Não foi possível carregar o conteúdo vigente do BigQuery agora.','error')
+        renderLibrary()
+      }finally{
+        generatorState.loading = false
+      }
+    }
+
+    function normalizeBQQuestions(rows){
+      return (rows || []).map((row, index)=>{
+        const qid = String(row.qid || row.QID || row.id_question || row.question_id || row.id || '').trim()
+        const toolkit = String(row.toolkit || row.Toolkit || row.toolkit_id || row.toolkitId || '').trim()
+        const toolkitLabel = String(row.toolkit_label || row.toolkitLabel || row.toolkit_name || row.toolkitName || toolkit).trim()
+        const pillar = String(row.pillar || row.Pillar || '').trim()
+        const topic = String(row.topic || row.Topic || '').trim()
+        const questionType = normalizeQuestionType(row.questionType || row.question_type || row.type || row.Question_Type || '')
+        return {
+          qid: qid || `BQ_${index + 1}`,
+          toolkit,
+          toolkitLabel: toolkitLabel || toolkit,
+          pillar,
+          topic,
+          text: String(row.text || row.questionText || row.question_text || row.question_txt || row.Question || '').trim(),
+          status: String(row.status || row.Status || 'ativo').trim().toLowerCase(),
+          questionType,
+          possibleResponses: normalizeResponses(row.possibleResponses || row.possible_responses || row.responses || row.Possible_Responses),
+          expectedRules: Array.isArray(row.expectedRules || row.expected_rules) ? (row.expectedRules || row.expected_rules) : [],
+          dependencyRules: Array.isArray(row.dependencyRules || row.dependency_if) ? (row.dependencyRules || row.dependency_if) : [],
+          recommendation: String(row.recommendation || row.Recommendation || '').trim(),
+          strongPoint: String(row.strongPoint || row.strong_point || '').trim(),
+          weakPoint: String(row.weakPoint || row.weak_point || '').trim(),
+          tooltip: String(row.tooltip || row.Tooltip || '').trim(),
+          taxonomy: String(row.taxonomy || row.Taxonomy || '').trim()
+        }
+      }).filter(q=>q.toolkit && q.qid)
+    }
+    function normalizeQuestionType(value){
+      const v = String(value || '').trim().toLowerCase()
+      if(['adherence','aderencia','aderência','sim_nao','yes_no'].includes(v)) return 'Adherence'
+      if(['multiple','multipla','múltipla','multiple choice','multipla escolha'].includes(v)) return 'Multiple'
+      if(['number','numeric','numerica','numérica'].includes(v)) return 'Number'
+      if(['text','texto','texto livre'].includes(v)) return 'Text'
+      if(['unique','unica','única','single','single choice'].includes(v)) return 'Unique'
+      return value && QUESTION_TYPE_CONFIG[value] ? value : ''
+    }
+    function normalizeResponses(value){
+      if(Array.isArray(value)) return value.map(v=>String(v).trim()).filter(Boolean)
+      if(typeof value === 'string') return value.split(/[;\n|]+/).map(v=>v.trim()).filter(Boolean)
+      return []
+    }
+    function uniqueBy(items, keyFn){
+      const seen = new Set()
+      return items.filter(item=>{const key = keyFn(item); if(!key || seen.has(key)) return false; seen.add(key); return true})
+    }
+    function questionsForToolkit(toolkit=generatorState.toolkit){return generatorQuestions.filter(q=>q.toolkit === toolkit)}
+    function findQuestion(qid){return generatorQuestions.find(q=>q.qid === qid)}
+    function currentQuestionType(){return document.getElementById('fieldQuestionType')?.value || ''}
+    function configForType(type){return QUESTION_TYPE_CONFIG[type] || {responsesLocked:true,defaultResponses:[],operators:[],connectors:false,lockedExpected:true}}
+
     function initGenerator(){
-      if(generatorState.initialized) return
+      if(generatorState.initialized){syncGeneratorMenus(); setGeneratorMode('editar'); loadGeneratorContentFromWebhook(); return}
       generatorState.initialized = true
+      syncGeneratorMenus()
 
-      /* Toolbar modos */
-      document.querySelectorAll('.toolbar-mode').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          document.querySelectorAll('.toolbar-mode').forEach(b=>b.classList.remove('active'))
-          btn.classList.add('active')
-          generatorState.mode = btn.dataset.genMode
-          if(generatorState.mode === 'novo') clearBuilder()
-        })
-      })
+      document.querySelectorAll('.toolbar-mode').forEach(btn=>btn.addEventListener('click',()=>setGeneratorMode(btn.dataset.genMode)))
 
-      /* Toolkit selector */
       const toolbarToolkit = document.getElementById('toolbarToolkit')
       const fieldToolkit = document.getElementById('fieldToolkit')
+      toolbarToolkit.addEventListener('change',()=>setToolkit(toolbarToolkit.value))
+      fieldToolkit.addEventListener('change',()=>setToolkit(fieldToolkit.value))
 
-      toolbarToolkit.addEventListener('change',()=>{
-        generatorState.toolkit = toolbarToolkit.value
-        fieldToolkit.value = toolbarToolkit.value
-        renderLibrary()
-        updateIdFinal()
-      })
-      fieldToolkit.addEventListener('change',()=>{
-        if(toolbarToolkit.value !== fieldToolkit.value){
-          toolbarToolkit.value = fieldToolkit.value
-          generatorState.toolkit = fieldToolkit.value
-          renderLibrary()
-        }
-        updateIdFinal()
-      })
-
-      /* QID -> ID Final */
       document.getElementById('fieldQid').addEventListener('input', updateIdFinal)
-
-      /* Busca biblioteca */
+      document.getElementById('fieldPillar').addEventListener('change',()=>{populateTopicOptions(); renderRules('dependency')})
+      document.getElementById('fieldTopic').addEventListener('change',()=>renderRules('dependency'))
+      document.getElementById('fieldQuestionType').addEventListener('change', syncQuestionTypeBehavior)
       document.getElementById('librarySearch').addEventListener('input', renderLibrary)
 
-      /* Possible responses - chips */
       const responsesInput = document.getElementById('responsesInput')
       const responsesWrap = document.getElementById('responsesWrap')
       responsesInput.addEventListener('keydown', e=>{
+        if(responsesInput.disabled) return
         if(e.key === 'Enter' && responsesInput.value.trim()){
           e.preventDefault()
           const v = responsesInput.value.trim()
           if(!generatorState.possibleResponses.includes(v)){
             generatorState.possibleResponses.push(v)
             renderResponseChips()
+            renderRules('expected')
+            renderRules('dependency')
           }
           responsesInput.value = ''
         }else if(e.key === 'Backspace' && !responsesInput.value && generatorState.possibleResponses.length){
           generatorState.possibleResponses.pop()
           renderResponseChips()
+          renderRules('expected')
+          renderRules('dependency')
         }
       })
       responsesWrap.addEventListener('click', e=>{
-        if(e.target === responsesWrap) responsesInput.focus()
+        if(!responsesInput.disabled && e.target === responsesWrap) responsesInput.focus()
         const rm = e.target.closest('.response-chip-remove')
-        if(rm){
-          const idx = parseInt(rm.dataset.idx,10)
-          generatorState.possibleResponses.splice(idx,1)
+        if(rm && !responsesInput.disabled){
+          generatorState.possibleResponses.splice(parseInt(rm.dataset.idx,10),1)
           renderResponseChips()
+          renderRules('expected')
+          renderRules('dependency')
         }
       })
 
-      /* Botões de adicionar regra */
-      document.querySelectorAll('[data-add-rule]').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          const type = btn.dataset.addRule
-          addRule(type)
-        })
-      })
-
-      /* Botões de ação */
+      document.querySelectorAll('[data-add-rule]').forEach(btn=>btn.addEventListener('click',()=>addRule(btn.dataset.addRule)))
       document.getElementById('btnSalvar').addEventListener('click',()=>handleSave(false))
       document.getElementById('btnSalvarAplicar').addEventListener('click',()=>handleSave(true))
       document.getElementById('btnLimpar').addEventListener('click',clearBuilder)
-      document.getElementById('btnDesativar').addEventListener('click',()=>{
-        setBuilderStatus('Questão desativada (visual apenas - integração pendente).','success')
-      })
-      document.getElementById('btnExcluirRascunho').addEventListener('click',()=>{
-        if(confirm('Tem certeza que deseja excluir este rascunho?')){
-          clearBuilder()
-          setBuilderStatus('Rascunho excluído.','success')
-        }
-      })
+      document.getElementById('btnDesativar').addEventListener('click',()=>setBuilderStatus('Questão desativada (visual apenas - integração pendente).','success'))
+      document.getElementById('btnExcluirRascunho').addEventListener('click',()=>{if(confirm('Tem certeza que deseja excluir este rascunho?')){clearBuilder();setBuilderStatus('Rascunho excluído.','success')}})
 
-      /* Render inicial */
-      renderLibrary()
-      renderResponseChips()
-      renderRules('expected')
+      setGeneratorMode('editar')
+      loadGeneratorContentFromWebhook()
+    }
+    function setGeneratorMode(mode){
+      generatorState.mode = mode
+      document.querySelectorAll('.toolbar-mode').forEach(b=>b.classList.toggle('active', b.dataset.genMode === mode))
+      if(mode === 'novo'){
+        clearBuilder()
+        renderLibrary(true)
+      }else{
+        renderLibrary()
+      }
+    }
+    function setToolkit(toolkit){
+      generatorState.toolkit = toolkit
+      document.getElementById('toolbarToolkit').value = toolkit
+      document.getElementById('fieldToolkit').value = toolkit
+      populatePillarOptions()
+      populateTopicOptions()
+      updateIdFinal()
+      renderLibrary(generatorState.mode === 'novo')
       renderRules('dependency')
     }
-
+    function syncGeneratorMenus(){
+      const toolkits = uniqueBy(generatorQuestions, q=>q.toolkit).map(q=>({value:q.toolkit,label:q.toolkitLabel || q.toolkit}))
+      const options = '<option value="">Selecione um toolkit...</option>' + toolkits.map(t=>`<option value="${escapeHtml(t.value)}">${escapeHtml(t.label)}</option>`).join('')
+      document.getElementById('toolbarToolkit').innerHTML = options
+      document.getElementById('fieldToolkit').innerHTML = options.replace('Selecione um toolkit...', 'Selecione...')
+      populatePillarOptions()
+      populateTopicOptions()
+    }
+    function selectDefaultToolkit(){
+      const toolkits = uniqueBy(generatorQuestions, q=>q.toolkit).map(q=>q.toolkit)
+      if(!generatorState.toolkit && toolkits.length === 1) setToolkit(toolkits[0])
+    }
+    function populatePillarOptions(){
+      const current = document.getElementById('fieldPillar').value
+      const pillars = uniqueBy(questionsForToolkit(), q=>q.pillar).map(q=>q.pillar)
+      document.getElementById('fieldPillar').innerHTML = '<option value="">Selecione...</option>' + pillars.map(p=>`<option ${p===current?'selected':''}>${escapeHtml(p)}</option>`).join('')
+    }
+    function populateTopicOptions(){
+      const current = document.getElementById('fieldTopic').value
+      const pillar = document.getElementById('fieldPillar').value
+      const topics = uniqueBy(questionsForToolkit().filter(q=>!pillar || q.pillar === pillar), q=>q.topic).map(q=>q.topic)
+      document.getElementById('fieldTopic').innerHTML = '<option value="">Selecione...</option>' + topics.map(t=>`<option ${t===current?'selected':''}>${escapeHtml(t)}</option>`).join('')
+    }
     function updateIdFinal(){
       const qid = document.getElementById('fieldQid').value.trim()
       const tk = document.getElementById('fieldToolkit').value.trim()
-      const idFinal = document.getElementById('fieldIdFinal')
-      idFinal.value = (qid && tk) ? `${qid}_${tk}` : ''
+      document.getElementById('fieldIdFinal').value = (qid && tk) ? `${qid}_${tk}` : ''
     }
-
-    function renderLibrary(){
+    function renderLibrary(forceBlank=false){
       const list = document.getElementById('libraryList')
       const countEl = document.getElementById('libraryCount')
-      const tk = generatorState.toolkit
-      const search = (document.getElementById('librarySearch').value || '').toLowerCase().trim()
-
-      if(!tk){
-        list.innerHTML = '<div class="library-empty">Selecione um toolkit para carregar as questões existentes do BigQuery.</div>'
+      if(forceBlank || generatorState.mode === 'novo'){
+        list.innerHTML = '<div class="library-empty">ConstruÃ§Ã£o do zero ativa. Nenhuma questão da biblioteca estÃ¡ selecionada.</div>'
         countEl.textContent = '0'
         return
       }
-
-      const items = (GENERATOR_LIBRARY_MOCK[tk] || []).filter(q=>{
-        if(!search) return true
-        return q.qid.toLowerCase().includes(search)
-          || q.pillar.toLowerCase().includes(search)
-          || q.topic.toLowerCase().includes(search)
-          || q.text.toLowerCase().includes(search)
-      })
-
-      countEl.textContent = String(items.length)
-
-      if(!items.length){
-        list.innerHTML = '<div class="library-empty">Nenhuma questão encontrada para os filtros aplicados.</div>'
+      if(generatorState.loading){
+        list.innerHTML = '<div class="library-empty">Carregando conteúdo vigente do BigQuery...</div>'
+        countEl.textContent = '0'
         return
       }
-
+      const tk = generatorState.toolkit
+      const search = (document.getElementById('librarySearch').value || '').toLowerCase().trim()
+      if(!generatorQuestions.length){
+        list.innerHTML = '<div class="library-empty">Nenhum conteúdo real do BigQuery foi carregado para o Gerador.</div>'
+        countEl.textContent = '0'
+        return
+      }
+      if(!tk){
+        list.innerHTML = '<div class="library-empty">Selecione um toolkit carregado do BigQuery.</div>'
+        countEl.textContent = '0'
+        return
+      }
+      const items = questionsForToolkit(tk).filter(q=>!search || [q.qid,q.pillar,q.topic,q.text].join(' ').toLowerCase().includes(search))
+      countEl.textContent = String(items.length)
+      if(!items.length){list.innerHTML = '<div class="library-empty">Nenhuma questão encontrada para os filtros aplicados.</div>'; return}
       list.innerHTML = items.map(q=>`
         <div class="library-item ${generatorState.activeQuestionId===q.qid?'active':''}" data-qid="${escapeHtml(q.qid)}">
-          <div class="library-item-top">
-            <span class="library-item-qid">${escapeHtml(q.qid)}</span>
-            <span class="library-pill ${q.status}">${escapeHtml(q.status)}</span>
-          </div>
+          <div class="library-item-top"><span class="library-item-qid">${escapeHtml(q.qid)}</span><span class="library-pill ${escapeHtml(q.status)}">${escapeHtml(q.status)}</span></div>
           <div class="library-item-text">${escapeHtml(q.text)}</div>
-          <div class="library-item-meta">
-            <span>${escapeHtml(q.pillar)}</span>
-            <span>·</span>
-            <span>${escapeHtml(q.topic)}</span>
-          </div>
-        </div>
-      `).join('')
-
-      list.querySelectorAll('.library-item').forEach(item=>{
-        item.addEventListener('click',()=>loadQuestion(item.dataset.qid))
-      })
+          <div class="library-item-meta"><span>${escapeHtml(q.pillar)}</span><span>Â·</span><span>${escapeHtml(q.topic)}</span></div>
+        </div>`).join('')
+      list.querySelectorAll('.library-item').forEach(item=>item.addEventListener('click',()=>loadQuestion(item.dataset.qid)))
     }
-
     function loadQuestion(qid){
-      generatorState.activeQuestionId = qid
-      const detail = QUESTION_DETAIL_MOCK[qid]
-      const summary = (GENERATOR_LIBRARY_MOCK[generatorState.toolkit] || []).find(q=>q.qid===qid)
-
-      const data = detail || (summary ? {
-        toolkit: generatorState.toolkit,
-        pillar: summary.pillar,
-        topic: summary.topic,
-        questionText: summary.text,
-        questionType:'unica',
-        possibleResponses:[],
-        expectedRules:[],
-        dependencyRules:[],
-        recommendation:'',
-        strongPoint:'',
-        weakPoint:'',
-        tooltip:'',
-        taxonomy:''
-      } : null)
-
+      const data = findQuestion(qid)
       if(!data) return
-
-      document.getElementById('fieldQid').value = qid
+      generatorState.mode = 'editar'
+      document.querySelectorAll('.toolbar-mode').forEach(b=>b.classList.toggle('active', b.dataset.genMode === 'editar'))
+      generatorState.activeQuestionId = qid
+      generatorState.toolkit = data.toolkit
+      document.getElementById('fieldQid').value = data.qid
       document.getElementById('fieldToolkit').value = data.toolkit
       document.getElementById('toolbarToolkit').value = data.toolkit
+      populatePillarOptions()
       document.getElementById('fieldPillar').value = data.pillar || ''
+      populateTopicOptions()
       document.getElementById('fieldTopic').value = data.topic || ''
-      document.getElementById('fieldQuestionText').value = data.questionText || ''
+      document.getElementById('fieldQuestionText').value = data.text || ''
       document.getElementById('fieldQuestionType').value = data.questionType || ''
       document.getElementById('fieldRecommendation').value = data.recommendation || ''
       document.getElementById('fieldStrongPoint').value = data.strongPoint || ''
       document.getElementById('fieldWeakPoint').value = data.weakPoint || ''
       document.getElementById('fieldTooltip').value = data.tooltip || ''
       document.getElementById('fieldTaxonomy').value = data.taxonomy || ''
-
       generatorState.possibleResponses = [...(data.possibleResponses || [])]
-      generatorState.expectedRules = [...(data.expectedRules || [])]
-      generatorState.dependencyRules = [...(data.dependencyRules || [])]
-
+      generatorState.expectedRules = normalizeRules(data.expectedRules || [], 'expected')
+      generatorState.dependencyRules = normalizeRules(data.dependencyRules || [], 'dependency')
+      syncQuestionTypeBehavior(false)
       updateIdFinal()
-      renderResponseChips()
-      renderRules('expected')
-      renderRules('dependency')
       renderLibrary()
       setBuilderStatus(`Questão ${qid} carregada.`,'success')
     }
-
+    function normalizeRules(rules, type){
+      return (rules || []).map((r,i)=>({field:type==='expected'?(r.field||'self'):(r.field||r.question||''),operator:r.operator||'igual',value:r.value||'',connector:i?((r.connector==='OU'||r.connector==='OR')?'OU':'E'):null}))
+    }
+    function syncQuestionTypeBehavior(resetRules=true){
+      const type = currentQuestionType()
+      const cfg = configForType(type)
+      const input = document.getElementById('responsesInput')
+      const wrap = document.getElementById('responsesWrap')
+      if(type === 'Adherence') generatorState.possibleResponses = [...cfg.defaultResponses]
+      if(type === 'Number' || type === 'Text' || !type) generatorState.possibleResponses = []
+      input.disabled = !!cfg.responsesLocked
+      input.placeholder = cfg.responsesLocked ? 'Campo bloqueado para este tipo' : 'Digite e pressione Enter...'
+      wrap.classList.toggle('disabled', !!cfg.responsesLocked)
+      if(resetRules){
+        generatorState.expectedRules = []
+        generatorState.dependencyRules = []
+      }
+      renderResponseChips()
+      renderRules('expected')
+      renderRules('dependency')
+    }
     function renderResponseChips(){
       const wrap = document.getElementById('responsesWrap')
       const input = document.getElementById('responsesInput')
       wrap.querySelectorAll('.response-chip').forEach(el=>el.remove())
+      const locked = configForType(currentQuestionType()).responsesLocked
       generatorState.possibleResponses.forEach((r,i)=>{
         const chip = document.createElement('span')
         chip.className = 'response-chip'
-        chip.innerHTML = `${escapeHtml(r)}<button class="response-chip-remove" data-idx="${i}" type="button" aria-label="Remover">×</button>`
+        chip.innerHTML = `${escapeHtml(r)}${locked?'':`<button class="response-chip-remove" data-idx="${i}" type="button" aria-label="Remover">×</button>`}`
         wrap.insertBefore(chip, input)
       })
     }
-
     function addRule(type){
+      const ruleType = type === 'expected' ? currentQuestionType() : ''
+      if(type === 'expected' && configForType(ruleType).lockedExpected) return
       const arr = type === 'expected' ? generatorState.expectedRules : generatorState.dependencyRules
       arr.push({field:type==='expected'?'self':'',operator:'igual',value:'',connector:arr.length?'E':null})
       renderRules(type)
     }
-
-    function removeRule(type, idx){
-      const arr = type === 'expected' ? generatorState.expectedRules : generatorState.dependencyRules
-      arr.splice(idx,1)
-      if(arr.length && arr[0].connector !== null) arr[0].connector = null
-      renderRules(type)
+    function removeRule(type, idx){const arr = type === 'expected' ? generatorState.expectedRules : generatorState.dependencyRules; arr.splice(idx,1); if(arr.length) arr[0].connector=null; renderRules(type)}
+    function updateRule(type, idx, prop, val){const arr = type === 'expected' ? generatorState.expectedRules : generatorState.dependencyRules; if(arr[idx]) arr[idx][prop] = val}
+    function questionTypeForRule(type, rule){return type === 'expected' ? currentQuestionType() : (findQuestion(rule.field)?.questionType || '')}
+    function responsesForRule(type, rule){return type === 'expected' ? generatorState.possibleResponses : (findQuestion(rule.field)?.possibleResponses || [])}
+    function valueControlHtml(type, rule, i, disabled){
+      const qType = questionTypeForRule(type, rule)
+      const responses = qType === 'Adherence' ? ['Sim','Não'] : responsesForRule(type, rule)
+      if(disabled) return `<input class="builder-input" type="text" value="" placeholder="Travado" disabled />`
+      if(qType === 'Multiple' || qType === 'Unique' || qType === 'Adherence'){
+        return `<select class="builder-select" data-prop="value" data-type="${type}" data-idx="${i}"><option value="">Selecione...</option>${responses.map(v=>`<option value="${escapeHtml(v)}" ${rule.value===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}</select>`
+      }
+      return `<input class="builder-input" type="${qType==='Number'?'number':'text'}" data-prop="value" data-type="${type}" data-idx="${i}" value="${escapeHtml(rule.value||'')}" placeholder="Valor" />`
     }
-
-    function updateRule(type, idx, prop, val){
-      const arr = type === 'expected' ? generatorState.expectedRules : generatorState.dependencyRules
-      if(arr[idx]) arr[idx][prop] = val
-    }
-
     function renderRules(type){
       const container = document.getElementById(type === 'expected' ? 'expectedRules' : 'dependencyRules')
+      const addBtn = document.querySelector(`[data-add-rule="${type}"]`)
       const rules = type === 'expected' ? generatorState.expectedRules : generatorState.dependencyRules
-      const otherQuestions = generatorState.toolkit
-        ? (GENERATOR_LIBRARY_MOCK[generatorState.toolkit] || []).map(q=>({val:q.qid,label:`${q.qid} - ${q.topic}`}))
-        : []
-
-      if(!rules.length){
-        container.innerHTML = '<div class="rules-empty">Nenhuma condição adicionada. Clique em "Adicionar condição" abaixo.</div>'
-        return
-      }
-
-      const operatorOptions = [
-        {v:'igual',l:'Igual a'},
-        {v:'diferente',l:'Diferente de'},
-        {v:'contem',l:'Contém'},
-        {v:'nao_contem',l:'Não contém'},
-        {v:'maior',l:'Maior que'},
-        {v:'menor',l:'Menor que'},
-        {v:'vazio',l:'Está vazio'},
-        {v:'preenchido',l:'Está preenchido'},
-      ]
-
+      const expectedLocked = type === 'expected' && configForType(currentQuestionType()).lockedExpected
+      if(addBtn) addBtn.disabled = expectedLocked
+      if(expectedLocked){container.innerHTML = '<div class="rules-empty">Expected Answer travado para questões do tipo Text.</div>'; return}
+      const otherQuestions = questionsForToolkit().filter(q=>q.qid !== document.getElementById('fieldQid').value.trim()).map(q=>({val:q.qid,label:`${q.qid} - ${q.topic || q.text}`,type:q.questionType}))
+      if(!rules.length){container.innerHTML = '<div class="rules-empty">Nenhuma condição adicionada. Clique em "Adicionar condição" abaixo.</div>'; return}
       container.innerHTML = rules.map((rule,i)=>{
-        const connectorHtml = i > 0 ? `
-          <div class="rule-operator">
-            <button type="button" class="rule-operator-btn ${rule.connector==='E'?'active':''}" data-conn="E" data-type="${type}" data-idx="${i}">E</button>
-            <button type="button" class="rule-operator-btn ${rule.connector==='OU'?'active':''}" data-conn="OU" data-type="${type}" data-idx="${i}">OU</button>
-          </div>
-        ` : ''
-
-        let fieldSelector
-        if(type === 'expected'){
-          /* Para Expected Answer, o "campo" pode ser a própria questão ("self") ou outra */
-          fieldSelector = `
-            <select class="builder-select" data-prop="field" data-type="${type}" data-idx="${i}">
-              <option value="self" ${rule.field==='self'?'selected':''}>Resposta da própria questão</option>
-              ${otherQuestions.map(q=>`<option value="${escapeHtml(q.val)}" ${rule.field===q.val?'selected':''}>${escapeHtml(q.label)}</option>`).join('')}
-            </select>
-          `
-        }else{
-          /* Para Dependency IF, o campo é sempre outra questão */
-          fieldSelector = `
-            <select class="builder-select" data-prop="field" data-type="${type}" data-idx="${i}">
-              <option value="">Selecione a pergunta…</option>
-              ${otherQuestions.map(q=>`<option value="${escapeHtml(q.val)}" ${rule.field===q.val?'selected':''}>${escapeHtml(q.label)}</option>`).join('')}
-            </select>
-          `
-        }
-
-        const valueDisabled = (rule.operator==='vazio'||rule.operator==='preenchido')
-
-        return `
-          ${connectorHtml}
-          <div class="rule-row">
-            ${fieldSelector}
-            <select class="builder-select" data-prop="operator" data-type="${type}" data-idx="${i}">
-              ${operatorOptions.map(o=>`<option value="${o.v}" ${rule.operator===o.v?'selected':''}>${o.l}</option>`).join('')}
-            </select>
-            <input class="builder-input" type="text" data-prop="value" data-type="${type}" data-idx="${i}" value="${escapeHtml(rule.value||'')}" placeholder="Valor" ${valueDisabled?'disabled':''} />
-            <button class="rule-remove" type="button" data-type="${type}" data-idx="${i}" aria-label="Remover condição">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-        `
+        const qType = questionTypeForRule(type, rule)
+        const cfg = configForType(qType)
+        const disabled = type === 'dependency' && (!rule.field || cfg.lockedExpected)
+        const operators = cfg.operators || []
+        const connectorHtml = i > 0 && cfg.connectors ? `<div class="rule-operator"><button type="button" class="rule-operator-btn ${rule.connector==='E'?'active':''}" data-conn="E" data-type="${type}" data-idx="${i}">E</button><button type="button" class="rule-operator-btn ${rule.connector==='OU'?'active':''}" data-conn="OU" data-type="${type}" data-idx="${i}">OU</button></div>` : ''
+        const fieldSelector = type === 'expected'
+          ? `<select class="builder-select" data-prop="field" data-type="${type}" data-idx="${i}" disabled><option value="self">Resposta da própria questão</option></select>`
+          : `<select class="builder-select" data-prop="field" data-type="${type}" data-idx="${i}"><option value="">Selecione a pergunta...</option>${otherQuestions.map(q=>`<option value="${escapeHtml(q.val)}" ${rule.field===q.val?'selected':''}>${escapeHtml(q.label)}</option>`).join('')}</select>`
+        return `${connectorHtml}<div class="rule-row">${fieldSelector}<select class="builder-select" data-prop="operator" data-type="${type}" data-idx="${i}" ${disabled?'disabled':''}>${operators.map(op=>`<option value="${op}" ${rule.operator===op?'selected':''}>${RULE_OPERATOR_LABELS[op]}</option>`).join('')}</select>${valueControlHtml(type, rule, i, disabled)}<button class="rule-remove" type="button" data-type="${type}" data-idx="${i}" aria-label="Remover condição"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button></div>`
       }).join('')
-
-      /* Bind events */
       container.querySelectorAll('[data-prop]').forEach(el=>{
         el.addEventListener('change',()=>{
           updateRule(el.dataset.type, parseInt(el.dataset.idx,10), el.dataset.prop, el.value)
-          if(el.dataset.prop === 'operator') renderRules(el.dataset.type)
+          if(el.dataset.prop === 'field' || el.dataset.prop === 'operator') renderRules(el.dataset.type)
         })
-        if(el.tagName === 'INPUT'){
-          el.addEventListener('input',()=>updateRule(el.dataset.type, parseInt(el.dataset.idx,10), el.dataset.prop, el.value))
-        }
+        if(el.tagName === 'INPUT') el.addEventListener('input',()=>updateRule(el.dataset.type, parseInt(el.dataset.idx,10), el.dataset.prop, el.value))
       })
-      container.querySelectorAll('.rule-remove').forEach(btn=>{
-        btn.addEventListener('click',()=>removeRule(btn.dataset.type, parseInt(btn.dataset.idx,10)))
-      })
-      container.querySelectorAll('.rule-operator-btn').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          updateRule(btn.dataset.type, parseInt(btn.dataset.idx,10), 'connector', btn.dataset.conn)
-          renderRules(btn.dataset.type)
-        })
-      })
+      container.querySelectorAll('.rule-remove').forEach(btn=>btn.addEventListener('click',()=>removeRule(btn.dataset.type, parseInt(btn.dataset.idx,10))))
+      container.querySelectorAll('.rule-operator-btn').forEach(btn=>btn.addEventListener('click',()=>{updateRule(btn.dataset.type, parseInt(btn.dataset.idx,10), 'connector', btn.dataset.conn); renderRules(btn.dataset.type)}))
     }
-
     function clearBuilder(){
-      ['fieldQid','fieldIdFinal','fieldTopic','fieldQuestionText','fieldRecommendation','fieldStrongPoint','fieldWeakPoint','fieldTooltip','fieldTaxonomy']
-        .forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})
+      ['fieldQid','fieldIdFinal','fieldQuestionText','fieldRecommendation','fieldStrongPoint','fieldWeakPoint','fieldTooltip','fieldTaxonomy'].forEach(id=>{const el=document.getElementById(id); if(el) el.value=''})
+      generatorState.toolkit = ''
+      document.getElementById('toolbarToolkit').value = ''
+      document.getElementById('fieldToolkit').value = ''
+      populatePillarOptions()
       document.getElementById('fieldPillar').value = ''
+      populateTopicOptions()
+      document.getElementById('fieldTopic').value = ''
       document.getElementById('fieldQuestionType').value = ''
       generatorState.possibleResponses = []
       generatorState.expectedRules = []
       generatorState.dependencyRules = []
       generatorState.activeQuestionId = null
-      renderResponseChips()
-      renderRules('expected')
-      renderRules('dependency')
-      renderLibrary()
+      syncQuestionTypeBehavior(false)
+      renderLibrary(true)
       setBuilderStatus('Formulário limpo.','')
     }
-
-    function setBuilderStatus(msg, type){
-      const el = document.getElementById('builderStatus')
-      if(!el) return
-      el.textContent = msg
-      el.className = 'builder-status' + (type ? ' ' + type : '')
-      if(msg) setTimeout(()=>{if(el.textContent===msg)el.textContent=''}, 4500)
-    }
-
+    function setBuilderStatus(msg, type){const el = document.getElementById('builderStatus'); if(!el) return; el.textContent = msg; el.className = 'builder-status' + (type ? ' ' + type : ''); if(msg) setTimeout(()=>{if(el.textContent===msg)el.textContent=''}, 4500)}
     function handleSave(applyImmediately){
       const qid = document.getElementById('fieldQid').value.trim()
       const tk = document.getElementById('fieldToolkit').value.trim()
       const qText = document.getElementById('fieldQuestionText').value.trim()
-
-      if(!qid || !tk || !qText){
-        setBuilderStatus('Preencha QID, Toolkit e o texto da pergunta antes de salvar.','error')
-        return
-      }
-
-      const payload = {
-        qid,
-        toolkit:tk,
-        idFinal: document.getElementById('fieldIdFinal').value,
-        pillar: document.getElementById('fieldPillar').value,
-        topic: document.getElementById('fieldTopic').value,
-        questionText: qText,
-        questionType: document.getElementById('fieldQuestionType').value,
-        possibleResponses: generatorState.possibleResponses,
-        expectedRules: generatorState.expectedRules,
-        dependencyRules: generatorState.dependencyRules,
-        recommendation: document.getElementById('fieldRecommendation').value,
-        strongPoint: document.getElementById('fieldStrongPoint').value,
-        weakPoint: document.getElementById('fieldWeakPoint').value,
-        tooltip: document.getElementById('fieldTooltip').value,
-        taxonomy: document.getElementById('fieldTaxonomy').value,
-        applyImmediately: !!applyImmediately
-      }
-
+      if(!qid || !tk || !qText){setBuilderStatus('Preencha QID, Toolkit e o texto da pergunta antes de salvar.','error'); return}
+      const payload = {qid,toolkit:tk,idFinal:document.getElementById('fieldIdFinal').value,pillar:document.getElementById('fieldPillar').value,topic:document.getElementById('fieldTopic').value,questionText:qText,questionType:document.getElementById('fieldQuestionType').value,possibleResponses:generatorState.possibleResponses,expectedRules:generatorState.expectedRules,dependencyRules:generatorState.dependencyRules,recommendation:document.getElementById('fieldRecommendation').value,strongPoint:document.getElementById('fieldStrongPoint').value,weakPoint:document.getElementById('fieldWeakPoint').value,tooltip:document.getElementById('fieldTooltip').value,taxonomy:document.getElementById('fieldTaxonomy').value,applyImmediately:!!applyImmediately}
       console.log('[Gerador] Payload pronto para envio:', payload)
       setBuilderStatus(applyImmediately ? `Questão ${qid} salva e aplicada.` : `Questão ${qid} salva como rascunho.`, 'success')
     }
@@ -3263,7 +3223,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       if(openBtn){
         e.preventDefault()
         e.stopPropagation()
-        openEnvironment(openBtn.dataset.open)
+        openEnvironment(openBtn.dataset.open, true)
         return
       }
 
@@ -3271,7 +3231,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       if(backBtn){
         e.preventDefault()
         e.stopPropagation()
-        backToLanding()
+        if(location.hash) history.back(); else backToLanding(false)
       }
     }, false)
 
@@ -3317,9 +3277,10 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     document.getElementById('fileEvidenceInput')?.addEventListener('change',e=>handleEvidenceFile(e.target.files?.[0]))
     document.getElementById('sendEvidenceBtn')?.addEventListener('click',sendEvidenceEvaluation)
     document.getElementById('clearEvidenceBtn')?.addEventListener('click',clearEvidence)
-    document.getElementById('backToLandingMappingBtn')?.addEventListener('click',backToLanding)
-    document.getElementById('backToLandingGeneratorBtn')?.addEventListener('click',backToLanding)
+    document.getElementById('backToLandingMappingBtn')?.addEventListener('click',()=>{if(location.hash) history.back(); else backToLanding(false)})
+    document.getElementById('backToLandingGeneratorBtn')?.addEventListener('click',()=>{if(location.hash) history.back(); else backToLanding(false)})
     updateMappingQuestion()
+    window.addEventListener('popstate',()=>{const hash=location.hash.replace('#',''); if(hash==='dados'||hash==='publicacoes'||hash==='mapeamento'||hash==='gerador') openEnvironment(hash,false); else backToLanding(false)})
 
     setSource('dados')
     home.style.display='none'
