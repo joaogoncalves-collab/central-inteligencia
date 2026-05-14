@@ -2453,6 +2453,62 @@ body.generator-loading-lock .generator-grid{
   opacity:.42;
 }
 
+
+/* V27.32 - Dependency IF individual na aba Questões */
+.individual-dependency-panel{
+  display:block;
+}
+body.bulk-dependency-mode .individual-dependency-panel{
+  display:none!important;
+}
+body.questions-mode .individual-dependency-panel,
+.editor-module-panel.active .individual-dependency-panel{
+  display:block!important;
+}
+.individual-dependency-card{
+  border:1px solid var(--border);
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 4px 16px rgba(0,0,0,.04);
+  overflow:hidden;
+}
+.individual-dependency-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#fffef7,#fff);
+}
+.individual-dependency-title{
+  font-size:15px;
+  font-weight:800;
+}
+.individual-dependency-hint{
+  color:var(--muted);
+  font-size:12px;
+}
+.individual-dependency-body{
+  padding:18px 20px;
+  display:grid;
+  gap:12px;
+}
+.individual-dependency-warning{
+  border:1px dashed var(--yellow);
+  background:#fffdf0;
+  border-radius:16px;
+  padding:12px 14px;
+  color:#6b4e00;
+  font-size:13px;
+  line-height:1.45;
+}
+.individual-dependency-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -2865,7 +2921,29 @@ body.generator-loading-lock .generator-grid{
 
         </div>
         <div class="editor-module-panel active" id="moduleAfterBulkQuestionsPanel">
-<!-- Inteligência -->
+
+<section class="individual-dependency-panel individual-dependency-card" id="individualDependencyPanel">
+  <div class="individual-dependency-header">
+    <div class="individual-dependency-title">Dependency IF da questão</div>
+    <div class="individual-dependency-hint">Condições individuais para exibir esta pergunta</div>
+  </div>
+  <div class="individual-dependency-body">
+    <div class="individual-dependency-warning">
+      Esta área edita a dependência somente da questão atualmente aberta. Para alterar várias perguntas ao mesmo tempo, use a aba Dependências em massa.
+    </div>
+    <div id="individualDependencyRules"></div>
+    <div class="individual-dependency-actions">
+      <button class="rule-add" type="button" id="addIndividualDependencyRule">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        Adicionar condição individual
+      </button>
+      <button class="builder-btn ghost" type="button" id="clearIndividualDependencyRules">Limpar dependência individual</button>
+    </div>
+  </div>
+</section>
+
+
+        <!-- Inteligência -->
         <section class="builder-section">
           <header class="builder-section-header">
             <div class="builder-section-icon">
@@ -5410,7 +5488,7 @@ document.addEventListener('click', function(e){
 
   document.addEventListener('DOMContentLoaded', ()=>{
     bindEditorModuleTabs()
-    activateEditorModule('questions')
+    activateEditorModule('questions'); setTimeout(()=>{ if(window.renderIndividualDependencyRules) window.renderIndividualDependencyRules() }, 120)
   })
 
   document.addEventListener('click', ()=>{
@@ -5700,6 +5778,200 @@ document.addEventListener('click', function(e){
 
   window.forceLoadGeneratorContent = forceLoadGeneratorContent
   window.showGeneratorLoading = showGeneratorLoading
+})()
+</script>
+
+
+<script>
+/* V27.32 - Dependency IF individual e Dependency IF em massa coexistindo */
+(function(){
+  function $(id){ return document.getElementById(id) }
+
+  function escapeLocal(value){
+    return String(value ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))
+  }
+
+  function getQuestionsSafe(){
+    try{
+      if(typeof generatorQuestions !== 'undefined' && Array.isArray(generatorQuestions)) return generatorQuestions
+    }catch(e){}
+    return []
+  }
+
+  function getStateSafe(){
+    try{
+      if(typeof generatorState !== 'undefined') return generatorState
+    }catch(e){}
+    return null
+  }
+
+  function getConfigForType(qType){
+    try{
+      if(typeof configForType === 'function') return configForType(qType)
+    }catch(e){}
+    if(qType === 'Adherence') return {operators:['igual','diferente'],connectors:true}
+    if(qType === 'Number') return {operators:['igual','diferente','maior','menor'],connectors:true}
+    if(qType === 'Multiple' || qType === 'Unique') return {operators:['igual','diferente'],connectors:true}
+    return {operators:['igual','diferente'],connectors:true}
+  }
+
+  function operatorLabel(op){
+    return {igual:'IGUAL A', diferente:'DIFERENTE DE', maior:'MAIOR QUE', menor:'MENOR QUE'}[op] || op
+  }
+
+  function findQuestionSafe(qid){
+    try{
+      if(typeof findQuestion === 'function') return findQuestion(qid)
+    }catch(e){}
+    return getQuestionsSafe().find(q=>q.qid === qid)
+  }
+
+  function responsesForQuestion(q){
+    if(!q) return []
+    if(q.questionType === 'Adherence') return ['Sim','Não']
+    return Array.isArray(q.possibleResponses) ? q.possibleResponses : []
+  }
+
+  function renderIndividualDependencyRules(){
+    const container = $('individualDependencyRules')
+    const state = getStateSafe()
+    if(!container || !state) return
+
+    const currentQid = $('fieldQid')?.value?.trim() || ''
+    const toolkit = state.toolkit || $('fieldToolkit')?.value || ''
+    const rules = Array.isArray(state.dependencyRules) ? state.dependencyRules : []
+
+    const questions = getQuestionsSafe()
+      .filter(q=>q.qid && q.qid !== currentQid && (!toolkit || q.toolkit === toolkit))
+      .slice()
+      .sort((a,b)=>{
+        const aNew = a.status === 'new' || a.isNew
+        const bNew = b.status === 'new' || b.isNew
+        if(aNew !== bNew) return aNew ? -1 : 1
+        return String(a.qid || '').localeCompare(String(b.qid || ''))
+      })
+
+    if(!rules.length){
+      container.innerHTML = '<div class="rules-empty">Nenhuma dependência individual definida para esta questão.</div>'
+      return
+    }
+
+    container.innerHTML = rules.map((rule,i)=>{
+      const q = findQuestionSafe(rule.field)
+      const qType = q?.questionType || ''
+      const cfg = getConfigForType(qType)
+      const operators = cfg.operators || ['igual','diferente']
+      const responses = responsesForQuestion(q)
+      const disabled = !rule.field
+      const connectorHtml = i > 0 ? `
+        <div class="rule-operator">
+          <button type="button" class="rule-operator-btn ${rule.connector === 'E' ? 'active' : ''}" data-ind-conn="E" data-idx="${i}">E</button>
+          <button type="button" class="rule-operator-btn ${rule.connector === 'OU' ? 'active' : ''}" data-ind-conn="OU" data-idx="${i}">OU</button>
+        </div>` : ''
+
+      const valueControl = disabled
+        ? `<input class="builder-input" type="text" placeholder="Selecione uma pergunta" disabled />`
+        : (responses.length
+          ? `<select class="builder-select" data-ind-prop="value" data-idx="${i}">
+              <option value="">Selecione...</option>
+              ${responses.map(v=>`<option value="${escapeLocal(v)}" ${rule.value === v ? 'selected' : ''}>${escapeLocal(v)}</option>`).join('')}
+            </select>`
+          : `<input class="builder-input" type="${qType === 'Number' ? 'number' : 'text'}" data-ind-prop="value" data-idx="${i}" value="${escapeLocal(rule.value || '')}" placeholder="Valor" />`)
+
+      return `${connectorHtml}
+        <div class="rule-row">
+          <select class="builder-select" data-ind-prop="field" data-idx="${i}">
+            <option value="">Selecione a pergunta...</option>
+            ${questions.map(q=>`<option value="${escapeLocal(q.qid)}" ${rule.field === q.qid ? 'selected' : ''}>${escapeLocal((q.status === 'new' || q.isNew ? 'NEW - ' : '') + q.qid + ' - ' + (q.topic || q.text || ''))}</option>`).join('')}
+          </select>
+          <select class="builder-select" data-ind-prop="operator" data-idx="${i}" ${disabled ? 'disabled' : ''}>
+            ${operators.map(op=>`<option value="${op}" ${rule.operator === op ? 'selected' : ''}>${operatorLabel(op)}</option>`).join('')}
+          </select>
+          ${valueControl}
+          <button class="rule-remove" type="button" data-ind-remove="${i}" aria-label="Remover condição">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>`
+    }).join('')
+
+    container.querySelectorAll('[data-ind-prop]').forEach(el=>{
+      const update = ()=>{
+        const idx = Number(el.dataset.idx)
+        const prop = el.dataset.indProp
+        state.dependencyRules[idx][prop] = el.value
+        if(prop === 'field' || prop === 'operator') renderIndividualDependencyRules()
+      }
+      el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', update)
+    })
+
+    container.querySelectorAll('[data-ind-remove]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = Number(btn.dataset.indRemove)
+        state.dependencyRules.splice(idx,1)
+        if(state.dependencyRules.length) state.dependencyRules[0].connector = null
+        renderIndividualDependencyRules()
+      })
+    })
+
+    container.querySelectorAll('[data-ind-conn]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const idx = Number(btn.dataset.idx)
+        state.dependencyRules[idx].connector = btn.dataset.indConn
+        renderIndividualDependencyRules()
+      })
+    })
+  }
+
+  function addIndividualDependencyRule(){
+    const state = getStateSafe()
+    if(!state) return
+    if(!Array.isArray(state.dependencyRules)) state.dependencyRules = []
+    state.dependencyRules.push({field:'', operator:'igual', value:'', connector:state.dependencyRules.length ? 'E' : null})
+    renderIndividualDependencyRules()
+  }
+
+  function clearIndividualDependencyRules(){
+    const state = getStateSafe()
+    if(!state) return
+    state.dependencyRules = []
+    renderIndividualDependencyRules()
+    if(typeof setBuilderStatus === 'function') setBuilderStatus('Dependência individual limpa em rascunho.', 'success')
+  }
+
+  function bindIndividualDependency(){
+    const add = $('addIndividualDependencyRule')
+    if(add && add.dataset.boundIndividual !== '1'){
+      add.dataset.boundIndividual = '1'
+      add.addEventListener('click', addIndividualDependencyRule)
+    }
+
+    const clear = $('clearIndividualDependencyRules')
+    if(clear && clear.dataset.boundIndividual !== '1'){
+      clear.dataset.boundIndividual = '1'
+      clear.addEventListener('click', clearIndividualDependencyRules)
+    }
+
+    document.querySelectorAll('.editor-module-tab').forEach(tab=>{
+      if(tab.dataset.individualDepBound === '1') return
+      tab.dataset.individualDepBound = '1'
+      tab.addEventListener('click', ()=>{
+        if(tab.dataset.moduleTarget === 'questions'){
+          setTimeout(renderIndividualDependencyRules, 80)
+        }
+      }, true)
+    })
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    bindIndividualDependency()
+    setTimeout(renderIndividualDependencyRules, 300)
+  })
+
+  document.addEventListener('click', ()=>{
+    setTimeout(()=>{bindIndividualDependency(); if(document.body.classList.contains('questions-mode')) renderIndividualDependencyRules()}, 80)
+  }, true)
+
+  window.renderIndividualDependencyRules = renderIndividualDependencyRules
 })()
 </script>
 
