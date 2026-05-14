@@ -1883,6 +1883,159 @@ body.source-gerador .landing{display:none!important}
   }
 }
 
+
+/* V27.23 - Novas questões destacadas */
+.library-pill.new{
+  background:#111;
+  border-color:#111;
+  color:#fff;
+}
+.library-item.is-new{
+  border-color:var(--yellow);
+  background:linear-gradient(90deg,#fff8d1,#fff);
+}
+
+
+/* V27.24 - Toolkit digitável com lista suspensa + loading do Gerador */
+.toolbar-toolkit{
+  position:relative;
+}
+.toolkit-combo-box{
+  position:relative;
+  width:min(620px,100%);
+}
+.toolkit-combo-box::after{
+  content:"";
+  position:absolute;
+  right:18px;
+  top:50%;
+  width:8px;
+  height:8px;
+  border-right:2px solid #6b7280;
+  border-bottom:2px solid #6b7280;
+  transform:translateY(-65%) rotate(45deg);
+  pointer-events:none;
+}
+.toolbar-toolkit-combo{
+  padding-right:42px!important;
+}
+.toolkit-dropdown{
+  display:none;
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  right:0;
+  z-index:2500;
+  max-height:300px;
+  overflow:auto;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 18px 38px rgba(0,0,0,.14);
+  padding:8px;
+}
+.toolkit-dropdown.open{
+  display:block;
+}
+.toolkit-option{
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:14px;
+  color:#111;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.toolkit-option:hover,
+.toolkit-option.active{
+  background:var(--yellow-soft);
+}
+.toolkit-option small{
+  color:var(--muted);
+  font-size:11px;
+}
+.toolkit-option-empty{
+  padding:14px 12px;
+  color:var(--muted);
+  font-size:13px;
+  text-align:center;
+}
+.generator-loading-overlay{
+  display:none;
+  position:fixed;
+  inset:54px 0 0 0;
+  z-index:2300;
+  background:rgba(255,255,255,.86);
+  backdrop-filter:blur(6px);
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.generator-loading-overlay.active{
+  display:flex;
+}
+.generator-loading-card{
+  width:min(420px,100%);
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:24px;
+  padding:24px;
+  box-shadow:0 20px 48px rgba(0,0,0,.14);
+  display:grid;
+  gap:14px;
+  text-align:center;
+}
+.generator-loading-spinner{
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  border:4px solid #fff1a8;
+  border-top-color:var(--yellow);
+  animation:generatorSpin .9s linear infinite;
+  margin:0 auto;
+}
+@keyframes generatorSpin{to{transform:rotate(360deg)}}
+.generator-loading-title{
+  font-weight:700;
+  font-size:16px;
+}
+.generator-loading-text{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
+.generator.loading{
+  pointer-events:none;
+  user-select:none;
+}
+.generator.loading .generator-toolbar,
+.generator.loading .generator-grid{
+  opacity:.42;
+}
+@media(max-width:760px){
+  .toolkit-combo-box{
+    width:100%;
+  }
+  .toolkit-dropdown{
+    max-height:260px;
+  }
+}
+
+
+/* V27.27 - Selecionar tudo visível na biblioteca */
+.library-bulk-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+}
+.library-bulk-actions .library-bulk-clear{
+  white-space:nowrap;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -2040,7 +2193,10 @@ body.source-gerador .landing{display:none!important}
       </div>
       <div class="toolbar-toolkit">
         <span class="toolbar-toolkit-label">Toolkit:</span>
-        <input id="toolbarToolkitSearch" class="toolbar-toolkit-combo" type="text" list="toolbarToolkitOptions" placeholder="Buscar ou selecionar toolkit..." autocomplete="off" />
+        <div class="toolkit-combo-box" id="toolbarToolkitComboBox">
+          <input id="toolbarToolkitSearch" class="toolbar-toolkit-combo" type="text" placeholder="Buscar toolkit..." autocomplete="off" />
+          <div id="toolbarToolkitDropdown" class="toolkit-dropdown"></div>
+        </div>
         <datalist id="toolbarToolkitOptions"></datalist>
         <select id="toolbarToolkit" class="toolbar-toolkit-select" aria-hidden="true" tabindex="-1">
           <option value="">Selecione um toolkit...</option>
@@ -2075,6 +2231,7 @@ body.source-gerador .landing{display:none!important}
           </div>
           <div class="library-bulk-actions">
             <span class="library-bulk-count" id="libraryBulkCount">0 selecionadas para edição em massa</span>
+            <button class="library-bulk-clear" id="libraryBulkSelectAll" type="button">Selecionar tudo</button>
             <button class="library-bulk-clear" id="libraryBulkClear" type="button">Limpar seleção</button>
           </div>
         </div>
@@ -3187,6 +3344,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     async function loadGeneratorContentFromWebhook(){
       if(generatorState.loading || generatorState.loaded) return
       generatorState.loading = true
+      setGeneratorLoadingOverlay(true)
       renderLibrary()
       try{
         const r = await fetch(WEBHOOK_GERADOR_URL,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({action:'list_questions'})})
@@ -3206,6 +3364,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         renderLibrary()
       }finally{
         generatorState.loading = false
+        setGeneratorLoadingOverlay(false)
       }
     }
 
@@ -3258,10 +3417,74 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       return items.filter(item=>{const key = keyFn(item); if(!key || seen.has(key)) return false; seen.add(key); return true})
     }
     function questionsForToolkit(toolkit=generatorState.toolkit){return generatorQuestions.filter(q=>q.toolkit === toolkit)}
-    function findQuestion(qid){return generatorQuestions.find(q=>q.qid === qid)}
+    function findQuestion(qid){
+      return generatorQuestions.find(q=>q.qid === qid || `${q.qid}_${q.toolkit}` === qid || q.idFinal === qid)
+    }
     function currentQuestionType(){return document.getElementById('fieldQuestionType')?.value || ''}
     function configForType(type){return QUESTION_TYPE_CONFIG[type] || {responsesLocked:true,defaultResponses:[],operators:[],connectors:false,lockedExpected:true}}
 
+
+
+    function setGeneratorLoadingOverlay(isLoading){
+      const generator = document.getElementById('generator')
+      const overlay = document.getElementById('generatorLoadingOverlay')
+      if(generator) generator.classList.toggle('loading', !!isLoading)
+      if(overlay) overlay.classList.toggle('active', !!isLoading)
+    }
+
+    function getToolkitOptionsList(){
+      return uniqueBy(generatorQuestions, q=>q.toolkit)
+        .map(q=>({value:q.toolkit,label:q.toolkitLabel || q.toolkit,count:questionsForToolkit(q.toolkit).length}))
+        .filter(t=>t.value)
+        .sort((a,b)=>String(a.label).localeCompare(String(b.label)))
+    }
+
+    function renderToolkitDropdown(){
+      const input = document.getElementById('toolbarToolkitSearch')
+      const drop = document.getElementById('toolbarToolkitDropdown')
+      if(!input || !drop) return
+
+      if(generatorState.mode === 'novo'){
+        drop.classList.remove('open')
+        drop.innerHTML = ''
+        return
+      }
+
+      const term = (input.value || '').toLowerCase().trim()
+      const options = getToolkitOptionsList().filter(t=>{
+        const hay = `${t.label} ${t.value}`.toLowerCase()
+        return !term || hay.includes(term)
+      }).slice(0,80)
+
+      if(!options.length){
+        drop.innerHTML = '<div class="toolkit-option-empty">Nenhum toolkit encontrado.</div>'
+      }else{
+        drop.innerHTML = options.map(t=>`
+          <div class="toolkit-option" data-value="${escapeHtml(t.value)}" data-label="${escapeHtml(t.label)}">
+            <span>${escapeHtml(t.label)}</span>
+            <small>${t.count} questões</small>
+          </div>
+        `).join('')
+      }
+
+      drop.classList.add('open')
+
+      drop.querySelectorAll('.toolkit-option').forEach(opt=>{
+        opt.addEventListener('mousedown', e=>{
+          e.preventDefault()
+          const value = opt.dataset.value || ''
+          const label = opt.dataset.label || value
+          input.value = label
+          drop.classList.remove('open')
+          if(value) setToolkit(value)
+        })
+      })
+    }
+
+    function closeToolkitDropdown(){
+      const drop = document.getElementById('toolbarToolkitDropdown')
+      if(drop) drop.classList.remove('open')
+    }
 
     function resolveToolkitFromCombo(inputValue){
       const value = String(inputValue || '').trim()
@@ -3309,29 +3532,72 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
           const typed = e.target.value || ''
           const fieldToolkit = document.getElementById('fieldToolkit')
           if(fieldToolkit) fieldToolkit.value = typed
+          updateIdFinal()
+        }else{
+          renderToolkitDropdown()
         }
       })
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('focus',()=>renderToolkitDropdown())
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('click',()=>renderToolkitDropdown())
+      document.getElementById('toolbarToolkitSearch')?.addEventListener('blur',()=>setTimeout(closeToolkitDropdown,160))
       document.getElementById('toolbarToolkitSearch')?.addEventListener('change',()=>{
+        if(generatorState.mode === 'novo') return
         const resolved = resolveToolkitFromCombo(document.getElementById('toolbarToolkitSearch').value)
         if(resolved) setToolkit(resolved)
       })
       document.getElementById('toolbarToolkitSearch')?.addEventListener('keydown',(e)=>{
         if(e.key === 'Enter'){
           e.preventDefault()
-          const resolved = resolveToolkitFromCombo(e.target.value)
+          if(generatorState.mode === 'novo') return
+          const first = document.querySelector('#toolbarToolkitDropdown .toolkit-option')
+          const resolved = first?.dataset?.value || resolveToolkitFromCombo(e.target.value)
+          closeToolkitDropdown()
           if(resolved) setToolkit(resolved)
         }
+        if(e.key === 'Escape') closeToolkitDropdown()
       })
 
       document.getElementById('fieldQid').addEventListener('input', updateIdFinal)
-      document.getElementById('fieldPillar').addEventListener('change',()=>{populateTopicOptions(); renderRules('dependency')})
-      document.getElementById('fieldTopic').addEventListener('change',()=>renderRules('dependency'))
+      document.getElementById('fieldPillar').addEventListener('change',()=>{populateTopicOptions(); populateQuestionClassOptions(); renderRules('dependency')})
+      document.getElementById('fieldTopic').addEventListener('change',()=>{populateQuestionClassOptions(); renderRules('dependency')})
       document.getElementById('fieldQuestionType').addEventListener('change', syncQuestionTypeBehavior)
       document.getElementById('librarySearch').addEventListener('input',()=>renderLibrary())
       document.getElementById('libraryFilterPillar')?.addEventListener('change',()=>{populateLibraryFilters('pillar'); renderLibrary()})
       document.getElementById('libraryFilterTopic')?.addEventListener('change',()=>{populateLibraryFilters('topic'); renderLibrary()})
       document.getElementById('libraryFilterQuestionClass')?.addEventListener('change',()=>renderLibrary())
-      document.getElementById('libraryBulkClear')?.addEventListener('click',()=>{generatorState.selectedQuestionIds.clear(); renderLibrary(); updateBulkSelectionUI()})
+      document.getElementById('libraryBulkSelectAll')?.addEventListener('click',()=>{
+        const tk = generatorState.toolkit
+        const search = (document.getElementById('librarySearch')?.value || '').toLowerCase().trim()
+        const filterPillar = document.getElementById('libraryFilterPillar')?.value || ''
+        const filterTopic = document.getElementById('libraryFilterTopic')?.value || ''
+        const filterQuestionClass = document.getElementById('libraryFilterQuestionClass')?.value || ''
+
+        let items = tk ? questionsForToolkit(tk) : generatorQuestions
+
+        if(filterPillar) items = items.filter(q=>q.pillar === filterPillar)
+        if(filterTopic) items = items.filter(q=>q.topic === filterTopic)
+        if(filterQuestionClass) items = items.filter(q=>q.questionClass === filterQuestionClass)
+
+        if(search){
+          items = items.filter(q=>[
+            q.qid,
+            q.pillar,
+            q.topic,
+            q.questionClass,
+            q.text,
+            q.toolkit,
+            q.toolkitLabel
+          ].join(' ').toLowerCase().includes(search))
+        }
+
+        items.forEach(q=>generatorState.selectedQuestionIds.add(q.qid))
+
+        renderLibrary()
+        renderRules('dependency')
+        updateBulkSelectionUI()
+      })
+
+      document.getElementById('libraryBulkClear')?.addEventListener('click',()=>{generatorState.selectedQuestionIds.clear(); renderLibrary(); renderRules('dependency'); updateBulkSelectionUI()})
       document.getElementById('fieldQuestionClass')?.addEventListener('change',()=>{})
       document.getElementById('applyBulkDependencyBtn')?.addEventListener('click',()=>applyBulkDependency(false))
       document.getElementById('replaceBulkDependencyBtn')?.addEventListener('click',()=>applyBulkDependency(true))
@@ -3392,7 +3658,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
           toolkitCombo.value = ''
           toolkitCombo.readOnly = false
         }else{
-          toolkitCombo.setAttribute('list','toolbarToolkitOptions')
+          toolkitCombo.removeAttribute('list')
           toolkitCombo.placeholder = 'Buscar toolkit...'
           updateToolkitComboLabel()
         }
@@ -3421,6 +3687,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       updateToolkitComboLabel()
       populatePillarOptions()
       populateTopicOptions()
+      populateQuestionClassOptions()
       document.getElementById('libraryFilterPillar') && (document.getElementById('libraryFilterPillar').value = '')
       document.getElementById('libraryFilterTopic') && (document.getElementById('libraryFilterTopic').value = '')
       document.getElementById('libraryFilterQuestionClass') && (document.getElementById('libraryFilterQuestionClass').value = '')
@@ -3440,6 +3707,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       document.getElementById('fieldToolkit').innerHTML = options.replace('Selecione um toolkit...', 'Selecione...')
       populatePillarOptions()
       populateTopicOptions()
+      populateQuestionClassOptions()
       populateLibraryFilters()
       filterToolkitOptions()
     }
@@ -3452,6 +3720,28 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       const pillars = uniqueBy(questionsForToolkit(), q=>q.pillar).map(q=>q.pillar)
       document.getElementById('fieldPillar').innerHTML = '<option value="">Selecione...</option>' + pillars.map(p=>`<option ${p===current?'selected':''}>${escapeHtml(p)}</option>`).join('')
     }
+    function populateQuestionClassOptions(){
+      const el = document.getElementById('fieldQuestionClass')
+      if(!el) return
+
+      const current = el.value || ''
+      const toolkit = document.getElementById('fieldToolkit')?.value || generatorState.toolkit || ''
+      const pillar = document.getElementById('fieldPillar')?.value || ''
+      const topic = document.getElementById('fieldTopic')?.value || ''
+
+      let base = toolkit ? questionsForToolkit(toolkit) : generatorQuestions
+      if(pillar) base = base.filter(q=>q.pillar === pillar)
+      if(topic) base = base.filter(q=>q.topic === topic)
+
+      const standard = ['classred','classyellow','classgreen','classorange']
+      const fromData = uniqueBy(base, q=>q.questionClass).map(q=>q.questionClass).filter(Boolean)
+      const classes = [...new Set([...fromData, ...standard])].sort((a,b)=>String(a).localeCompare(String(b)))
+
+      el.innerHTML = '<option value="">Selecione...</option>' + classes.map(c=>`<option value="${escapeHtml(c)}" ${c === current ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')
+
+      if(current && classes.includes(current)) el.value = current
+    }
+
     function populateTopicOptions(){
       const current = document.getElementById('fieldTopic').value
       const pillar = document.getElementById('fieldPillar').value
@@ -3460,7 +3750,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     }
     function updateIdFinal(){
       const qid = document.getElementById('fieldQid').value.trim()
-      const tk = document.getElementById('fieldToolkit').value.trim()
+      const tk = (generatorState.mode === 'novo' ? (document.getElementById('toolbarToolkitSearch')?.value || '') : document.getElementById('fieldToolkit').value).trim()
       document.getElementById('fieldIdFinal').value = (qid && tk) ? `${qid}_${tk}` : ''
     }
 
@@ -3541,6 +3831,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       if(checked) generatorState.selectedQuestionIds.add(qid)
       else generatorState.selectedQuestionIds.delete(qid)
       renderLibrary()
+      renderRules('dependency')
       updateBulkSelectionUI()
     }
 
@@ -3597,6 +3888,13 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         ].join(' ').toLowerCase().includes(search))
       }
 
+      items = items.slice().sort((a,b)=>{
+        const aNew = a.status === 'new' || a.isNew
+        const bNew = b.status === 'new' || b.isNew
+        if(aNew !== bNew) return aNew ? -1 : 1
+        return String(a.qid || '').localeCompare(String(b.qid || ''))
+      })
+
       countEl.textContent = String(items.length)
 
       if(!items.length){
@@ -3609,12 +3907,12 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         const checked = generatorState.selectedQuestionIds.has(q.qid) ? 'checked' : ''
         const selected = generatorState.selectedQuestionIds.has(q.qid) ? 'selected' : ''
         return `
-        <div class="library-item ${selected} ${generatorState.activeQuestionId===q.qid?'active':''}" data-qid="${escapeHtml(q.qid)}">
+        <div class="library-item ${selected} ${(q.status === 'new' || q.isNew) ? 'is-new' : ''} ${generatorState.activeQuestionId===q.qid?'active':''}" data-qid="${escapeHtml(q.qid)}">
           <input class="library-item-check" type="checkbox" data-qid="${escapeHtml(q.qid)}" ${checked} aria-label="Selecionar questão ${escapeHtml(q.qid)}" />
           <div class="library-item-body">
             <div class="library-item-top">
               <span class="library-item-qid">${escapeHtml(q.qid)}</span>
-              <span class="library-pill ${escapeHtml(q.status)}">${escapeHtml(q.status)}</span>
+              <span class="library-pill ${(q.status === 'new' || q.isNew) ? 'new' : escapeHtml(q.status)}">${(q.status === 'new' || q.isNew) ? 'NEW' : escapeHtml(q.status)}</span>
             </div>
             <div class="library-item-text">${escapeHtml(q.text)}</div>
             <div class="library-item-meta">
@@ -3734,7 +4032,22 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       const expectedLocked = type === 'expected' && configForType(currentQuestionType()).lockedExpected
       if(addBtn) addBtn.disabled = expectedLocked
       if(expectedLocked){container.innerHTML = '<div class="rules-empty">Expected Answer travado para questões do tipo Text.</div>'; return}
-      const otherQuestions = questionsForToolkit().filter(q=>q.qid !== document.getElementById('fieldQid').value.trim()).map(q=>({val:q.qid,label:`${q.qid} - ${q.topic || q.text}`,type:q.questionType}))
+      const currentQid = document.getElementById('fieldQid').value.trim()
+      const hasBulkSelection = type === 'dependency' && generatorState.selectedQuestionIds && generatorState.selectedQuestionIds.size > 0
+      const otherQuestions = questionsForToolkit()
+        .filter(q=>hasBulkSelection || q.qid !== currentQid)
+        .slice()
+        .sort((a,b)=>{
+          const aNew = a.status === 'new' || a.isNew
+          const bNew = b.status === 'new' || b.isNew
+          if(aNew !== bNew) return aNew ? -1 : 1
+          return String(a.qid || '').localeCompare(String(b.qid || ''))
+        })
+        .map(q=>({
+          val:q.qid,
+          label:`${q.status === 'new' || q.isNew ? 'NEW - ' : ''}${q.qid} - ${q.topic || q.text}`,
+          type:q.questionType
+        }))
       if(!rules.length){container.innerHTML = '<div class="rules-empty">Nenhuma condição adicionada. Clique em "Adicionar condição" abaixo.</div>'; return}
       container.innerHTML = rules.map((rule,i)=>{
         const qType = questionTypeForRule(type, rule)
@@ -3767,6 +4080,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       populateTopicOptions()
       document.getElementById('fieldTopic').value = ''
       document.getElementById('fieldQuestionType').value = ''
+      populateQuestionClassOptions()
       document.getElementById('fieldQuestionClass').value = ''
       generatorState.possibleResponses = []
       generatorState.expectedRules = []
@@ -3843,17 +4157,100 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       }))
     }
 
+    function upsertQuestionInLibrary(payload, applyImmediately){
+      const qid = String(payload.qid || '').trim()
+      if(!qid) return
+
+      const normalized = {
+        qid,
+        toolkit: payload.toolkit || '',
+        toolkitLabel: payload.toolkit || '',
+        pillar: payload.pillar || '',
+        topic: payload.topic || '',
+        text: payload.questionText || '',
+        status: 'new',
+        isNew: true,
+        questionType: payload.questionType || '',
+        questionClass: payload.questionClass || '',
+        possibleResponses: payload.possibleResponses || [],
+        expectedRules: payload.expectedRules || [],
+        dependencyRules: payload.dependencyRules || [],
+        recommendation: payload.recommendation || '',
+        strongPoint: payload.strongPoint || '',
+        weakPoint: payload.weakPoint || '',
+        tooltip: payload.tooltip || '',
+        taxonomy: payload.taxonomy || ''
+      }
+
+      const existingIndex = generatorQuestions.findIndex(q=>q.qid === qid && q.toolkit === normalized.toolkit)
+      if(existingIndex >= 0){
+        generatorQuestions[existingIndex] = {...generatorQuestions[existingIndex], ...normalized}
+      }else{
+        generatorQuestions.unshift(normalized)
+      }
+
+      generatorState.mode = 'editar'
+      generatorState.toolkit = normalized.toolkit
+      generatorState.activeQuestionId = qid
+
+      document.querySelectorAll('.toolbar-mode').forEach(b=>b.classList.toggle('active', b.dataset.genMode === 'editar'))
+
+      const toolbarToolkit = document.getElementById('toolbarToolkit')
+      if(toolbarToolkit){
+        const exists = Array.from(toolbarToolkit.options).some(o=>o.value === normalized.toolkit)
+        if(!exists && normalized.toolkit){
+          toolbarToolkit.appendChild(new Option(normalized.toolkit, normalized.toolkit))
+        }
+        toolbarToolkit.value = normalized.toolkit
+      }
+
+      const fieldToolkit = document.getElementById('fieldToolkit')
+      if(fieldToolkit){
+        const exists = Array.from(fieldToolkit.options).some(o=>o.value === normalized.toolkit)
+        if(!exists && normalized.toolkit){
+          fieldToolkit.appendChild(new Option(normalized.toolkit, normalized.toolkit))
+        }
+        fieldToolkit.style.display = ''
+        fieldToolkit.value = normalized.toolkit
+      }
+
+      const combo = document.getElementById('toolbarToolkitSearch')
+      if(combo){
+        combo.removeAttribute('list')
+        combo.value = normalized.toolkit
+      }
+
+      syncGeneratorMenus()
+      if(toolbarToolkit) toolbarToolkit.value = normalized.toolkit
+      if(fieldToolkit) fieldToolkit.value = normalized.toolkit
+      if(combo) combo.value = normalized.toolkit
+
+      populatePillarOptions()
+      document.getElementById('fieldPillar').value = normalized.pillar
+      populateTopicOptions()
+      document.getElementById('fieldTopic').value = normalized.topic
+      populateQuestionClassOptions()
+      document.getElementById('fieldQuestionClass').value = normalized.questionClass
+
+      populateLibraryFilters('toolkit')
+      renderLibrary(false)
+      renderRules('dependency')
+      updateBulkSelectionUI()
+    }
+
     function handleSave(applyImmediately){
       const qid = document.getElementById('fieldQid').value.trim()
-      const tk = document.getElementById('fieldToolkit').value.trim()
+      const tk = (generatorState.mode === 'novo' ? (document.getElementById('toolbarToolkitSearch')?.value || '') : document.getElementById('fieldToolkit').value).trim()
       const qText = document.getElementById('fieldQuestionText').value.trim()
       if(!qid || !tk || !qText){setBuilderStatus('Preencha QID, Toolkit e o texto da pergunta antes de salvar.','error'); return}
       const payload = {qid,toolkit:tk,idFinal:document.getElementById('fieldIdFinal').value,pillar:document.getElementById('fieldPillar').value,topic:document.getElementById('fieldTopic').value,questionText:qText,questionType:document.getElementById('fieldQuestionType').value,questionClass:document.getElementById('fieldQuestionClass').value,possibleResponses:generatorState.possibleResponses,expectedRules:generatorState.expectedRules,dependencyRules:generatorState.dependencyRules,recommendation:document.getElementById('fieldRecommendation').value,strongPoint:document.getElementById('fieldStrongPoint').value,weakPoint:document.getElementById('fieldWeakPoint').value,tooltip:document.getElementById('fieldTooltip').value,taxonomy:document.getElementById('fieldTaxonomy').value,applyImmediately:!!applyImmediately}
+      upsertQuestionInLibrary(payload, applyImmediately)
       console.log('[Gerador] Payload pronto para envio:', payload)
-      setBuilderStatus(applyImmediately ? `Questão ${qid} salva e aplicada.` : `Questão ${qid} salva como rascunho.`, 'success')
+      setBuilderStatus(applyImmediately ? `Questão ${qid} salva, aplicada e destacada como NEW.` : `Questão ${qid} salva como rascunho e destacada como NEW.`, 'success')
     }
 
 
+    window.handleSave = handleSave
     function attachVoice(button,input){
       const SR=window.SpeechRecognition||window.webkitSpeechRecognition
       if(!SR){button.classList.add('hidden');return}
@@ -3968,5 +4365,268 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 })
 </script>
+
+<script>
+/* V27.22 - Correção de clique dos botões do Gerador */
+(function(){
+  function $(id){ return document.getElementById(id) }
+
+  function setGenStatus(msg, type){
+    const el = $('builderStatus')
+    if(!el) return
+    el.textContent = msg || ''
+    el.className = 'builder-status' + (type ? ' ' + type : '')
+  }
+
+  function clearGeneratorFormSafe(){
+    [
+      'fieldQid','fieldIdFinal','fieldQuestionText','fieldRecommendation',
+      'fieldStrongPoint','fieldWeakPoint','fieldTooltip','fieldTaxonomy'
+    ].forEach(id => { const el = $(id); if(el) el.value = '' })
+
+    ;['fieldToolkit','fieldPillar','fieldTopic','fieldQuestionType','fieldQuestionClass'].forEach(id => {
+      const el = $(id)
+      if(el) el.value = ''
+    })
+
+    const combo = $('toolbarToolkitSearch')
+    if(combo) combo.value = ''
+
+    const responses = $('responsesWrap')
+    if(responses){
+      responses.querySelectorAll('.response-chip').forEach(chip => chip.remove())
+    }
+
+    const expected = $('expectedRules')
+    const dependency = $('dependencyRules')
+    if(expected) expected.innerHTML = ''
+    if(dependency) dependency.innerHTML = ''
+
+    setGenStatus('Formulário limpo.', 'success')
+  }
+
+  function collectGeneratorPayloadSafe(applyImmediately){
+    const modeNovo = document.querySelector('[data-gen-mode="novo"]')?.classList.contains('active')
+    const toolkit = modeNovo
+      ? (($('toolbarToolkitSearch')?.value || '').trim())
+      : (($('fieldToolkit')?.value || $('toolbarToolkit')?.value || '').trim())
+
+    const qid = ($('fieldQid')?.value || '').trim()
+    const questionText = ($('fieldQuestionText')?.value || '').trim()
+
+    return {
+      qid,
+      toolkit,
+      idFinal: $('fieldIdFinal')?.value || (qid && toolkit ? `${qid}_${toolkit}` : ''),
+      pillar: $('fieldPillar')?.value || '',
+      topic: $('fieldTopic')?.value || '',
+      questionText,
+      questionType: $('fieldQuestionType')?.value || '',
+      questionClass: $('fieldQuestionClass')?.value || '',
+      possibleResponses: Array.from(document.querySelectorAll('#responsesWrap .response-chip'))
+        .map(el => (el.textContent || '').replace('×','').trim())
+        .filter(Boolean),
+      recommendation: $('fieldRecommendation')?.value || '',
+      strongPoint: $('fieldStrongPoint')?.value || '',
+      weakPoint: $('fieldWeakPoint')?.value || '',
+      tooltip: $('fieldTooltip')?.value || '',
+      taxonomy: $('fieldTaxonomy')?.value || '',
+      applyImmediately: !!applyImmediately
+    }
+  }
+
+  function saveGeneratorSafe(applyImmediately){
+    if(typeof window.handleSave === 'function'){
+      window.handleSave(applyImmediately)
+      return
+    }
+
+    const payload = collectGeneratorPayloadSafe(applyImmediately)
+
+    if(!payload.qid || !payload.toolkit || !payload.questionText){
+      setGenStatus('Preencha QID, Toolkit e o texto da pergunta antes de salvar.', 'error')
+      return
+    }
+
+    const list = document.getElementById('libraryList')
+    const count = document.getElementById('libraryCount')
+    if(list && count){
+      const currentCount = Number(count.textContent || '0')
+      count.textContent = String(currentCount + 1)
+      const item = document.createElement('div')
+      item.className = 'library-item is-new'
+      item.innerHTML = `<input class="library-item-check" type="checkbox" /><div class="library-item-body"><div class="library-item-top"><span class="library-item-qid">${payload.qid}</span><span class="library-pill new">NEW</span></div><div class="library-item-text">${payload.questionText}</div><div class="library-item-meta"><span>${payload.pillar || '-'}</span><span>·</span><span>${payload.topic || '-'}</span></div></div>`
+      list.prepend(item)
+    }
+
+    console.log('[Gerador] Payload pronto para envio:', payload)
+    setGenStatus(
+      applyImmediately
+        ? `Questão ${payload.qid} salva, aplicada e destacada como NEW.`
+        : `Questão ${payload.qid} salva como rascunho e destacada como NEW.`,
+      'success'
+    )
+  }
+
+  function exportGeneratorExcelSafe(){
+    const rows = typeof window.getGeneratorExcelRows === 'function'
+      ? window.getGeneratorExcelRows()
+      : []
+
+    if(!rows.length){
+      const payload = collectGeneratorPayloadSafe(false)
+      if(payload.qid || payload.questionText){
+        rows.push({
+          "Q ID": payload.qid,
+          "PILLAR NAME": payload.pillar,
+          "TOPIC NAME": payload.topic,
+          "QUESTION TEXT": payload.questionText,
+          "TAXONOMY": payload.taxonomy,
+          "DEPENDENCY IF": "",
+          "QUESTION TYPE": payload.questionType,
+          "POSSIBLE RESPONSES": payload.possibleResponses.join(" | "),
+          "EXPECTED ANSWER": "",
+          "QUESTION CLASS": payload.questionClass,
+          "RECOMMENDATION": payload.recommendation,
+          "STRONG POINT": payload.strongPoint,
+          "WEAK POINT": payload.weakPoint,
+          "TOOLTIP": payload.tooltip
+        })
+      }
+    }
+
+    if(!rows.length){
+      setGenStatus('Nenhuma questão disponível para exportação.', 'error')
+      return
+    }
+
+    if(typeof XLSX === 'undefined'){
+      const headers = Object.keys(rows[0])
+      const csv = [
+        headers.join(';'),
+        ...rows.map(row => headers.map(h => `"${String(row[h] ?? '').replaceAll('"','""')}"`).join(';'))
+      ].join('\n')
+
+      const blob = new Blob(["\ufeff" + csv], {type:'text/csv;charset=utf-8'})
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'Conteudo_Export.csv'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      setGenStatus('XLSX não carregou, exportei em CSV como alternativa.', 'success')
+      return
+    }
+
+    const workbook = XLSX.utils.book_new()
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'QUESTIONS')
+
+    const date = new Date()
+    const filename = `Conteudo_Export_${date.getFullYear()}_${String(date.getMonth()+1).padStart(2,'0')}_${String(date.getDate()).padStart(2,'0')}.xlsx`
+    XLSX.writeFile(workbook, filename)
+    setGenStatus('Excel exportado.', 'success')
+  }
+
+  function bindGeneratorButtonsSafe(){
+    const bindings = [
+      ['btnLimpar', () => clearGeneratorFormSafe()],
+      ['btnDesativar', () => setGenStatus('Questão marcada para desativação.', 'success')],
+      ['btnExcluirRascunho', () => {
+        if(confirm('Tem certeza que deseja excluir este rascunho?')){
+          clearGeneratorFormSafe()
+          setGenStatus('Rascunho excluído.', 'success')
+        }
+      }],
+      ['btnSalvar', () => saveGeneratorSafe(false)],
+      ['btnSalvarAplicar', () => saveGeneratorSafe(true)],
+      ['exportExcelBtn', () => exportGeneratorExcelSafe()]
+    ]
+
+    bindings.forEach(([id, fn]) => {
+      const btn = $(id)
+      if(!btn || btn.dataset.safeBound === '1') return
+      btn.dataset.safeBound = '1'
+      btn.addEventListener('click', function(e){
+        e.preventDefault()
+        e.stopPropagation()
+        fn()
+      }, true)
+    })
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    bindGeneratorButtonsSafe()
+
+    if(location.hash === '#gerador' && typeof initGenerator === 'function'){
+      try{ initGenerator() }catch(e){ console.warn('[Gerador] initGenerator falhou no carregamento direto:', e) }
+      bindGeneratorButtonsSafe()
+    }
+  })
+
+  window.addEventListener('hashchange', function(){
+    setTimeout(bindGeneratorButtonsSafe, 50)
+  })
+
+  document.addEventListener('click', function(e){
+    if(e.target.closest('#generator')) bindGeneratorButtonsSafe()
+  }, true)
+})()
+</script>
+
+
+<script>
+/* V27.27 - Selecionar tudo visível e funcional */
+document.addEventListener('click', function(e){
+  const btn = e.target.closest('#libraryBulkSelectAll')
+  if(!btn) return
+
+  e.preventDefault()
+  e.stopPropagation()
+
+  try{
+    if(!window.generatorState && typeof generatorState === 'undefined') return
+  }catch(err){}
+
+  const state = typeof generatorState !== 'undefined' ? generatorState : window.generatorState
+  const questions = typeof generatorQuestions !== 'undefined' ? generatorQuestions : (window.generatorQuestions || [])
+
+  if(!state || !questions.length) return
+
+  const tk = state.toolkit
+  const search = (document.getElementById('librarySearch')?.value || '').toLowerCase().trim()
+  const filterPillar = document.getElementById('libraryFilterPillar')?.value || ''
+  const filterTopic = document.getElementById('libraryFilterTopic')?.value || ''
+  const filterQuestionClass = document.getElementById('libraryFilterQuestionClass')?.value || ''
+
+  let items = tk ? questions.filter(q=>q.toolkit === tk) : questions
+
+  if(filterPillar) items = items.filter(q=>q.pillar === filterPillar)
+  if(filterTopic) items = items.filter(q=>q.topic === filterTopic)
+  if(filterQuestionClass) items = items.filter(q=>q.questionClass === filterQuestionClass)
+
+  if(search){
+    items = items.filter(q=>[
+      q.qid,
+      q.pillar,
+      q.topic,
+      q.questionClass,
+      q.text,
+      q.toolkit,
+      q.toolkitLabel
+    ].join(' ').toLowerCase().includes(search))
+  }
+
+  if(!state.selectedQuestionIds) state.selectedQuestionIds = new Set()
+  items.forEach(q=>state.selectedQuestionIds.add(q.qid))
+
+  if(typeof renderLibrary === 'function') renderLibrary()
+  if(typeof renderRules === 'function') renderRules('dependency')
+  if(typeof updateBulkSelectionUI === 'function') updateBulkSelectionUI()
+}, true)
+</script>
+
 </body>
 </html>
