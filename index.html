@@ -2137,7 +2137,7 @@ body.source-gerador .landing{display:none!important}
     const WEBHOOK_DADOS_URL='https://joaogoncalves.app.n8n.cloud/webhook/pergunta'
     const WEBHOOK_PUBLICACOES_URL='https://joaogoncalves.app.n8n.cloud/webhook/publicacoes'
     const WEBHOOK_AVALIACAO_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia'
-    const WEBHOOK_GERADOR_URL='https://joaogoncalves.app.n8n.cloud/webhook/gerador-conteudo'
+    const WEBHOOK_GERADOR_URL='https://joaogoncalves.app.n8n.cloud/webhook/Path:%20gerador-conteudo'
     const HISTORY_KEY='central_inteligente_conversas_v10'
     const home=document.getElementById('home'),chat=document.getElementById('chat'),mapping=document.getElementById('mapping'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
     let mode='resposta',sourceConsulta='dados',currentConversation=null
@@ -2911,7 +2911,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       generatorState.loading = true
       renderLibrary()
       try{
-        const r = await fetch(WEBHOOK_GERADOR_URL,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({fonte:'content_questions_draft'})})
+        const r = await fetch(WEBHOOK_GERADOR_URL,{method:'POST',headers:{'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify({action:'list_questions'})})
         const contentType = r.headers.get('content-type') || ''
         const raw = contentType.includes('application/json') ? await r.json() : await r.text()
         if(!r.ok) throw new Error(typeof raw === 'string' ? raw : JSON.stringify(raw))
@@ -2934,11 +2934,11 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     function normalizeBQQuestions(rows){
       return (rows || []).map((row, index)=>{
         const qid = String(row.qid || row.QID || row.id_question || row.question_id || row.id || '').trim()
-        const toolkit = String(row.toolkit || row.Toolkit || row.toolkit_id || row.toolkitId || '').trim()
-        const toolkitLabel = String(row.toolkit_label || row.toolkitLabel || row.toolkit_name || row.toolkitName || toolkit).trim()
-        const pillar = String(row.pillar || row.Pillar || '').trim()
-        const topic = String(row.topic || row.Topic || '').trim()
-        const questionType = normalizeQuestionType(row.questionType || row.question_type || row.type || row.Question_Type || '')
+        const toolkit = String(row.toolkit || row.Toolkit || row.id_toolkit || row.toolkit_id || row.toolkitId || '').trim()
+        const toolkitLabel = String(row.toolkit_label || row.toolkitLabel || row.toolkit_name || row.toolkitName || row.id_toolkit || toolkit).trim()
+        const pillar = String(row.pillar || row.Pillar || row.pillar_name || row.pillar_txt || row.pillar_namep || '').trim()
+        const topic = String(row.topic || row.Topic || row.topic_txt || row.topic_name || '').trim()
+        const questionType = normalizeQuestionType(row.questionType || row.question_type || row.type_question || row.type || row.Question_Type || '')
         return {
           qid: qid || `BQ_${index + 1}`,
           toolkit,
