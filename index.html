@@ -2380,6 +2380,79 @@ body.bulk-dependency-mode .forced-bulk-panel{
   .forced-bulk-grid{grid-template-columns:1fr}
 }
 
+
+/* V27.31 - Loading restaurado e animação de carregamento do conteúdo */
+.generator-loading-overlay{
+  display:none;
+  position:fixed;
+  inset:54px 0 0 0;
+  z-index:5000;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(8px);
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.generator-loading-overlay.active{
+  display:flex!important;
+}
+.generator-loading-card{
+  width:min(460px,100%);
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:26px;
+  padding:26px;
+  box-shadow:0 24px 64px rgba(0,0,0,.16);
+  display:grid;
+  gap:16px;
+  text-align:center;
+}
+.generator-loading-spinner{
+  width:50px;
+  height:50px;
+  border-radius:999px;
+  border:5px solid #fff1a8;
+  border-top-color:var(--yellow);
+  animation:generatorSpin31 .85s linear infinite;
+  margin:0 auto;
+}
+@keyframes generatorSpin31{
+  to{transform:rotate(360deg)}
+}
+.generator-loading-title{
+  font-size:17px;
+  font-weight:800;
+}
+.generator-loading-text{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.55;
+}
+.generator-loading-dots{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-top:2px;
+}
+.generator-loading-dots span{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background:var(--yellow);
+  animation:generatorDots31 1.05s infinite ease-in-out;
+}
+.generator-loading-dots span:nth-child(2){animation-delay:.15s}
+.generator-loading-dots span:nth-child(3){animation-delay:.30s}
+@keyframes generatorDots31{
+  0%,80%,100%{transform:translateY(0);opacity:.45}
+  40%{transform:translateY(-6px);opacity:1}
+}
+body.generator-loading-lock .generator-toolbar,
+body.generator-loading-lock .generator-grid{
+  pointer-events:none;
+  opacity:.42;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -5489,6 +5562,144 @@ document.addEventListener('click', function(e){
   }, true)
 
   window.refreshForcedBulkQuestions = refreshForcedBulkQuestions
+})()
+</script>
+
+
+<div class="generator-loading-overlay" id="generatorLoadingOverlay">
+  <div class="generator-loading-card">
+    <div class="generator-loading-spinner"></div>
+    <div class="generator-loading-title">Carregando conteúdo vigente</div>
+    <div class="generator-loading-text">Aguarde enquanto o editor busca os toolkits e a lista de questões.</div>
+    <div class="generator-loading-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+
+<script>
+/* V27.31 - Recuperação do loading e do carregamento de conteúdo */
+(function(){
+  function $(id){ return document.getElementById(id) }
+
+  function showGeneratorLoading(show){
+    const overlay = $('generatorLoadingOverlay')
+    if(overlay) overlay.classList.toggle('active', !!show)
+    document.body.classList.toggle('generator-loading-lock', !!show)
+  }
+
+  function extractRows(payload){
+    if(Array.isArray(payload)){
+      if(payload.length === 1 && payload[0] && typeof payload[0] === 'object'){
+        const nested = extractRows(payload[0])
+        if(nested.length) return nested
+      }
+      return payload
+    }
+    if(!payload || typeof payload !== 'object') return []
+    const keys = ['questions','questoes','rows','items','data','result','results','body','content']
+    for(const key of keys){
+      const rows = extractRows(payload[key])
+      if(rows.length) return rows
+    }
+    for(const value of Object.values(payload)){
+      if(Array.isArray(value)) return value
+    }
+    return []
+  }
+
+  async function forceLoadGeneratorContent(){
+    try{
+      if(typeof generatorQuestions !== 'undefined' && Array.isArray(generatorQuestions) && generatorQuestions.length){
+        if(typeof syncGeneratorMenus === 'function') syncGeneratorMenus()
+        if(typeof renderLibrary === 'function') renderLibrary(false)
+        return
+      }
+    }catch(e){}
+
+    const webhook = (typeof WEBHOOK_GERADOR_URL !== 'undefined' && WEBHOOK_GERADOR_URL) ? WEBHOOK_GERADOR_URL : ''
+    if(!webhook){
+      console.warn('[Gerador] WEBHOOK_GERADOR_URL não encontrado.')
+      return
+    }
+
+    showGeneratorLoading(true)
+
+    try{
+      const response = await fetch(webhook,{
+        method:'POST',
+        headers:{'Accept':'application/json','Content-Type':'application/json'},
+        body:JSON.stringify({action:'list_questions'})
+      })
+
+      const contentType = response.headers.get('content-type') || ''
+      const raw = contentType.includes('application/json') ? await response.json() : await response.text()
+
+      if(!response.ok) throw new Error(typeof raw === 'string' ? raw : JSON.stringify(raw))
+
+      const rows = extractRows(raw)
+
+      if(typeof window.setSDUBigQueryQuestions === 'function'){
+        window.setSDUBigQueryQuestions(rows)
+      }else if(typeof normalizeBQQuestions === 'function'){
+        generatorQuestions = normalizeBQQuestions(rows)
+      }else{
+        generatorQuestions = rows
+      }
+
+      try{
+        generatorState.loaded = true
+        generatorState.loading = false
+        if(window.showGeneratorLoading) window.showGeneratorLoading(false)
+      }catch(e){}
+
+      if(typeof syncGeneratorMenus === 'function') syncGeneratorMenus()
+      if(typeof selectDefaultToolkit === 'function') selectDefaultToolkit()
+
+      const toolkitInput = $('toolbarToolkitSearch')
+      const toolkitSelect = $('toolbarToolkit')
+      if(toolkitInput && toolkitSelect && toolkitSelect.options.length > 1 && !toolkitInput.value){
+        toolkitSelect.selectedIndex = 1
+        if(typeof setToolkit === 'function') setToolkit(toolkitSelect.value)
+      }
+
+      if(typeof renderLibrary === 'function') renderLibrary(false)
+      if(typeof setBuilderStatus === 'function'){
+        setBuilderStatus(rows.length ? 'Conteúdo vigente carregado.' : 'Webhook retornou sem questões.', rows.length ? 'success' : 'error')
+      }
+    }catch(err){
+      console.error('[Gerador] Falha ao carregar conteúdo:', err)
+      if(typeof setBuilderStatus === 'function') setBuilderStatus('Não foi possível carregar o conteúdo vigente. Verifique o webhook/list_questions.', 'error')
+    }finally{
+      try{
+        generatorState.loading = false
+        if(window.showGeneratorLoading) window.showGeneratorLoading(false)
+      }catch(e){}
+      showGeneratorLoading(false)
+    }
+  }
+
+  function patchGeneratorEntry(){
+    const generator = $('generator')
+    if(!generator) return
+
+    const visible = generator.classList.contains('active') || generator.style.display === 'flex'
+    if(visible){
+      forceLoadGeneratorContent()
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setTimeout(patchGeneratorEntry, 250)
+    if(location.hash === '#gerador') setTimeout(forceLoadGeneratorContent, 400)
+  })
+
+  document.addEventListener('click', e=>{
+    const openGerador = e.target.closest('[data-open="gerador"], #openGeradorBtn')
+    if(openGerador) setTimeout(forceLoadGeneratorContent, 500)
+  }, true)
+
+  window.forceLoadGeneratorContent = forceLoadGeneratorContent
+  window.showGeneratorLoading = showGeneratorLoading
 })()
 </script>
 
