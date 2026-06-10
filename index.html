@@ -790,6 +790,20 @@ body.source-publicacoes .chat-modes,
 body.source-publicacoes .section-label{
   display:none !important;
 }
+body.source-dados .mode-group,
+body.source-dados .chat-modes,
+body.source-dados .section-label{
+  display:none !important;
+}
+body.source-dados .actions{
+  margin-top:24px;
+}
+.natural-data-answer{
+  white-space:pre-wrap;
+  color:#202124;
+  font-size:15px;
+  line-height:1.7;
+}
 body.source-publicacoes .search-box{
   margin-top:4px;
 }
@@ -3506,7 +3520,7 @@ body.questions-mode .individual-dependency-panel,
 
     function setSource(source){
       sourceConsulta = source === 'publicacoes' ? 'publicacoes' : (source === 'mapeamento' ? 'mapeamento' : (source === 'gerador' ? 'gerador' : 'dados'))
-      if(sourceConsulta === 'publicacoes') mode = 'resposta'
+      if(sourceConsulta === 'publicacoes' || sourceConsulta === 'dados') mode = 'resposta'
       document.body.classList.toggle('source-publicacoes', sourceConsulta === 'publicacoes')
       document.body.classList.toggle('source-dados', sourceConsulta === 'dados')
       document.body.classList.toggle('source-mapeamento', sourceConsulta === 'mapeamento')
@@ -3669,6 +3683,73 @@ body.questions-mode .individual-dependency-panel,
         return null
       }
     }
+
+    function extractNaturalDataAnswer(payload){
+      if(Array.isArray(payload)) payload = payload[0] || null
+      if(payload === null || payload === undefined) return ''
+
+      if(typeof payload === 'string'){
+        const parsed = tryParseJsonResponse(payload)
+        if(parsed && parsed !== payload){
+          const nested = extractNaturalDataAnswer(parsed)
+          if(nested) return nested
+        }
+        return payload.trim()
+      }
+
+      if(typeof payload !== 'object') return String(payload)
+
+      const direct = [
+        payload.answer,
+        payload.resposta,
+        payload.natural_answer,
+        payload.final_answer,
+        payload.data?.answer,
+        payload.data?.resposta
+      ].find(value=>typeof value === 'string' && value.trim())
+
+      if(direct) return direct.trim()
+
+      if(payload.content?.parts?.length){
+        const contentText = payload.content.parts.map(part=>part?.text || '').join('\n').trim()
+        if(contentText){
+          const parsed = tryParseJsonResponse(contentText)
+          return parsed ? (extractNaturalDataAnswer(parsed) || contentText) : contentText
+        }
+      }
+
+      if(payload.candidates?.[0]?.content?.parts?.length){
+        const candidateText = payload.candidates[0].content.parts.map(part=>part?.text || '').join('\n').trim()
+        if(candidateText){
+          const parsed = tryParseJsonResponse(candidateText)
+          return parsed ? (extractNaturalDataAnswer(parsed) || candidateText) : candidateText
+        }
+      }
+
+      for(const key of ['output','text','response']){
+        const value = payload[key]
+        if(typeof value !== 'string' || !value.trim()) continue
+        const parsed = tryParseJsonResponse(value)
+        if(parsed){
+          const nested = extractNaturalDataAnswer(parsed)
+          if(nested) return nested
+        }
+        return value.trim()
+      }
+
+      return ''
+    }
+
+    function buildNaturalDataAnswer(payload){
+      const answer = extractNaturalDataAnswer(payload)
+      if(!answer) return null
+
+      const content = document.createElement('div')
+      content.className = 'natural-data-answer'
+      content.textContent = answer
+      return content
+    }
+
     function normalizeCardsPayload(payload){
       if(Array.isArray(payload)) payload = payload[0] || null
       if(!payload || typeof payload !== 'object') return null
@@ -3961,7 +4042,7 @@ body.questions-mode .individual-dependency-panel,
         const kicker = document.createElement('div'); kicker.className='source-card-kicker'; kicker.textContent = card.fonte || urlDomain(card.url) || 'Fonte institucional'
         const title = document.createElement('div'); title.className='source-card-title'; title.textContent = card.titulo
         const desc = document.createElement('div'); desc.className='source-card-description'; desc.textContent = card.descricao
-        const meta = document.createElement('div'); meta.className='source-card-meta'; meta.textContent = [card.data, urlDomain(card.url)].filter(Boolean).join(' â€¢ ')
+        const meta = document.createElement('div'); meta.className='source-card-meta'; meta.textContent = [card.data, urlDomain(card.url)].filter(Boolean).join(' • ')
         const action = document.createElement('div'); action.className='source-card-action'; action.innerHTML = 'Saiba mais <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         body.appendChild(kicker); body.appendChild(title); if(card.descricao) body.appendChild(desc); if(meta.textContent) body.appendChild(meta); if(normalizeExternalUrl(card.url)) body.appendChild(action)
         a.appendChild(thumb); a.appendChild(body); cardsWrap.appendChild(a)
@@ -3989,7 +4070,7 @@ renderHistory()}
           <div class="history-item-top">
             <div class="history-main">
               <div class="history-question">${escapeHtml(title)}</div>
-              <div class="history-meta">${total} pergunta(s) â€¢ ${escapeHtml(c.updatedAt||'')}</div>
+              <div class="history-meta">${total} pergunta(s) • ${escapeHtml(c.updatedAt||'')}</div>
             </div>
             <div class="history-actions">
               <button class="history-action-btn rename" title="Renomear conversa" data-id="${c.id}">
@@ -4067,9 +4148,14 @@ renderHistory()}
         bubble.innerHTML='<div class="thinking-wrap"><span>Pensando</span><span class="typing-dots"><span></span><span></span><span></span></span></div>'
       }else{
         const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
-        const dataResponse = parsedPayload ? buildDataResponse(parsedPayload) : null
-        const richCards = !dataResponse && parsedPayload ? buildSourceCards(parsedPayload) : null
-        if(dataResponse){
+        const naturalDataAnswer = role==='assistant' && sourceConsulta==='dados' && parsedPayload
+          ? buildNaturalDataAnswer(parsedPayload)
+          : null
+        const dataResponse = !naturalDataAnswer && parsedPayload ? buildDataResponse(parsedPayload) : null
+        const richCards = !naturalDataAnswer && !dataResponse && parsedPayload ? buildSourceCards(parsedPayload) : null
+        if(naturalDataAnswer){
+          bubble.appendChild(naturalDataAnswer)
+        }else if(dataResponse){
           bubble.appendChild(dataResponse)
         }else if(richCards){
           bubble.appendChild(richCards)
@@ -4110,7 +4196,7 @@ renderHistory()}
         const webhookUrl = sourceConsulta === 'publicacoes' ? WEBHOOK_PUBLICACOES_URL : WEBHOOK_DADOS_URL
         const payload = sourceConsulta === 'publicacoes'
           ? {pergunta, fonte_consulta:'publicacoes', formato:'link_card'}
-          : {pergunta, toolkit:selectedDadosToolkit, session_id:currentConversation.id, tipo_saida:mode, fonte_consulta:'dados_internos'}
+          : {pergunta, toolkit:selectedDadosToolkit, session_id:currentConversation.id, tipo_saida:'resposta', fonte_consulta:'dados_internos'}
 
         const controller = new AbortController()
         timeoutId = setTimeout(() => controller.abort(), 60000)
