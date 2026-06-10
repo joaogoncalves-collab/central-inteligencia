@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -460,6 +460,28 @@ body.chat-open .footer{
 .source-card[aria-disabled="true"]:hover{transform:none;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .source-card[aria-disabled="true"] .source-card-action{display:none}
 
+.data-response{display:grid;gap:14px;color:#202124}
+.bubble:has(.data-response){max-width:min(980px,94%)}
+.data-response-head{display:grid;gap:6px}
+.data-response-title{font-size:18px;font-weight:600;line-height:1.35}
+.data-response-message{font-size:14px;line-height:1.55;color:#4b5563}
+.data-response-filters{display:flex;gap:8px;flex-wrap:wrap}
+.data-filter-chip{border:1px solid var(--border);background:#fafafa;border-radius:999px;padding:5px 10px;font-size:12px;color:#5f6368}
+.data-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.data-metric{border:1px solid var(--border);border-radius:16px;background:#fff;padding:12px 14px}
+.data-metric-label{font-size:12px;color:#6b7280;margin-bottom:4px}
+.data-metric-value{font-size:22px;font-weight:600;color:#111;line-height:1.2}
+.data-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px;background:#fff}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.data-table th,.data-table td{border-bottom:1px solid #eef0f3;padding:10px 12px;text-align:left;vertical-align:top}
+.data-table th{background:#fafafa;font-size:12px;color:#5f6368;font-weight:600;white-space:nowrap}
+.data-table tr:last-child td{border-bottom:0}
+.data-list{display:grid;gap:10px}
+.data-list-item{border:1px solid var(--border);border-radius:16px;background:#fff;padding:12px 14px;display:grid;gap:6px}
+.data-list-title{font-weight:600;line-height:1.35}
+.data-list-meta{font-size:12px;color:#6b7280;line-height:1.45}
+.data-list-value{font-size:13px;color:#202124;line-height:1.45}
+
 
 /* V27 - Tela inicial com duas centrais */
 .landing{
@@ -788,6 +810,106 @@ body.source-publicacoes .chat-input{
 }
 body.source-publicacoes .knowledge-hint{
   display:block;
+}
+
+.dados-toolkit-panel{
+  display:none;
+  position:fixed;
+  top:8px;
+  left:50%;
+  z-index:1250;
+  width:min(420px,38vw);
+  height:38px;
+  transform:translateX(-50%);
+  border:1px solid rgba(218,220,224,.82);
+  border-radius:999px;
+  background:rgba(248,249,250,.92);
+  backdrop-filter:blur(12px);
+  padding:0 6px 0 13px;
+  align-items:center;
+  grid-template-columns:20px minmax(0,1fr) 30px;
+  gap:8px;
+  box-shadow:none;
+}
+body.context-active.source-dados .dados-toolkit-panel{
+  display:grid;
+}
+.dados-toolkit-icon{
+  width:19px;
+  height:19px;
+  color:#80868b;
+}
+.dados-toolkit-panel select{
+  width:100%;
+  height:34px;
+  border:0;
+  background:transparent;
+  color:#202124;
+  font:inherit;
+  font-size:15px;
+  padding:0 6px;
+  outline:0;
+  cursor:pointer;
+  min-width:0;
+}
+.dados-toolkit-panel select:focus{
+  color:#000;
+}
+.dados-toolkit-refresh{
+  width:30px;
+  height:30px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:#5f6368;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:.16s;
+}
+.dados-toolkit-refresh:hover{
+  background:#eceff3;
+  color:#202124;
+}
+.dados-toolkit-refresh svg{
+  width:16px;
+  height:16px;
+}
+#dadosToolkitTitle{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+}
+.dados-toolkit-status{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+}
+.dados-toolkit-status.ok{color:#188038}
+.dados-toolkit-status.error{color:#b3261e}
+@media(max-width:760px){
+  .dados-toolkit-panel{
+    top:62px;
+    left:14px;
+    right:14px;
+    width:auto;
+    transform:none;
+    z-index:900;
+  }
+}
+@media(min-width:761px) and (max-width:1080px){
+  .dados-toolkit-panel{
+    width:min(360px,34vw);
+  }
+  .dados-toolkit-panel select{
+    font-size:14px;
+  }
 }
 
 
@@ -2578,6 +2700,23 @@ body.questions-mode .individual-dependency-panel,
       <img src="solidaridad-logo.png" alt="Solidaridad" />
     </div>
     <div class="header-actions"><button class="pill-btn" id="historyBtn">Histórico</button></div>
+    <div class="dados-toolkit-panel" id="dadosToolkitPanel">
+      <svg class="dados-toolkit-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M10.8 18.1a7.3 7.3 0 1 1 0-14.6 7.3 7.3 0 0 1 0 14.6Z" stroke="currentColor" stroke-width="2"/>
+        <path d="m16.2 16.2 4.3 4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <select id="dadosToolkitSelect" aria-label="Toolkit para consulta de dados">
+        <option value="">Carregando toolkits...</option>
+      </select>
+      <button class="dados-toolkit-refresh" id="dadosToolkitReloadBtn" type="button" title="Atualizar lista de toolkits" aria-label="Atualizar lista de toolkits">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6v5h-5M4 18v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18.2 9A7 7 0 0 0 6.4 6.8L4 9M5.8 15A7 7 0 0 0 17.6 17.2L20 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <strong id="dadosToolkitTitle">Selecione o toolkit</strong>
+      <div class="dados-toolkit-status" id="dadosToolkitStatus">Selecione um toolkit para consultar os dados.</div>
+    </div>
   </header>
 
 
@@ -2766,7 +2905,7 @@ body.questions-mode .individual-dependency-panel,
           </div>
           <div class="library-search">
             <svg viewBox="0 0 24 24" fill="none"><path d="M10.8 18.1a7.3 7.3 0 1 1 0-14.6 7.3 7.3 0 0 1 0 14.6Z" stroke="currentColor" stroke-width="2"/><path d="m16.2 16.2 4.3 4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input id="librarySearch" type="text" placeholder="Buscar por QID, pilar ou texto…" autocomplete="off" />
+            <input id="librarySearch" type="text" placeholder="Buscar por QID, pilar ou textoâ€¦" autocomplete="off" />
           </div>
           <div class="library-filters">
             <select id="libraryFilterPillar" class="library-filter-select" aria-label="Filtrar por Pillar">
@@ -2950,7 +3089,7 @@ body.questions-mode .individual-dependency-panel,
                   <span class="builder-tooltip" data-tip="Respostas válidas para questões de escolha. Pressione Enter para adicionar cada opção.">i</span>
                 </label>
                 <div class="responses-wrap" id="responsesWrap">
-                  <input id="responsesInput" class="responses-input" type="text" placeholder="Digite e pressione Enter…" />
+                  <input id="responsesInput" class="responses-input" type="text" placeholder="Digite e pressione Enterâ€¦" />
                 </div>
                 <div class="builder-field-help">Pressione Enter para adicionar cada resposta possível.</div>
               </div>
@@ -3209,14 +3348,159 @@ body.questions-mode .individual-dependency-panel,
   <footer class="footer">SDU - Sistemas Digitais Unificados - Unidade Digital Fundação Solidaridad</footer>
 
   <script>
-    const WEBHOOK_DADOS_URL='https://joaogoncalves.app.n8n.cloud/webhook/pergunta'
+    const WEBHOOK_DADOS_URL='https://joaogoncalves.app.n8n.cloud/webhook/central-inteligencia'
+    const WEBHOOK_TOOLKITS_URL='https://joaogoncalves.app.n8n.cloud/webhook/central-inteligencia-toolkits'
     const WEBHOOK_PUBLICACOES_URL='https://joaogoncalves.app.n8n.cloud/webhook/publicacoes'
     const WEBHOOK_AVALIACAO_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia'
     const WEBHOOK_MAPPING_QUESTIONS_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia-questions'
     const WEBHOOK_GERADOR_URL='https://joaogoncalves.app.n8n.cloud/webhook/Path:%20gerador-conteudo'
     const HISTORY_KEY='central_inteligente_conversas_v10'
+    const DADOS_TOOLKIT_KEY='central_inteligente_toolkit_dados_v1'
     const home=document.getElementById('home'),chat=document.getElementById('chat'),mapping=document.getElementById('mapping'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
+    const dadosToolkitSelect=document.getElementById('dadosToolkitSelect'),dadosToolkitStatus=document.getElementById('dadosToolkitStatus'),dadosToolkitReloadBtn=document.getElementById('dadosToolkitReloadBtn'),dadosToolkitTitle=document.getElementById('dadosToolkitTitle')
     let mode='resposta',sourceConsulta='dados',currentConversation=null
+    let selectedDadosToolkit=localStorage.getItem(DADOS_TOOLKIT_KEY)||'',dadosToolkitsLoaded=false
+
+    function normalizeToolkitOption(item){
+      const source = item?.json && typeof item.json === 'object' ? item.json : item
+      if(!source || typeof source !== 'object') return null
+
+      const id = String(
+        source.id_toolkit ||
+        source.toolkit ||
+        source.value ||
+        source.id ||
+        ''
+      ).trim()
+
+      const name = String(
+        source.toolkit_name ||
+        source.name ||
+        source.label ||
+        id
+      ).trim()
+
+      if(!id) return null
+
+      const produtores = source.total_produtores || source.total || source.count || source.produtores
+      const label = produtores ? `${name} (${produtores} produtores)` : name
+
+      return {id,name,label}
+    }
+
+    function extractToolkitOptions(payload){
+      const buckets = []
+      if(Array.isArray(payload)) buckets.push(payload)
+      if(Array.isArray(payload?.data)) buckets.push(payload.data)
+      if(Array.isArray(payload?.toolkits)) buckets.push(payload.toolkits)
+      if(Array.isArray(payload?.options)) buckets.push(payload.options)
+      if(Array.isArray(payload?.json?.data)) buckets.push(payload.json.data)
+      if(Array.isArray(payload?.json?.toolkits)) buckets.push(payload.json.toolkits)
+      if(Array.isArray(payload?.field?.options)) buckets.push(payload.field.options)
+
+      return buckets
+        .flat()
+        .map(normalizeToolkitOption)
+        .filter(Boolean)
+        .filter((item,index,array)=>array.findIndex(other=>other.id===item.id)===index)
+        .sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'))
+    }
+
+    function setToolkitStatus(text,type=''){
+      if(!dadosToolkitStatus) return
+      dadosToolkitStatus.textContent = text || ''
+      dadosToolkitStatus.className = `dados-toolkit-status ${type}`.trim()
+    }
+
+    function setToolkitTitle(text){
+      if(dadosToolkitTitle) dadosToolkitTitle.textContent = text || 'Selecione o toolkit'
+    }
+
+    function renderToolkitOptions(options){
+      if(!dadosToolkitSelect) return
+      dadosToolkitSelect.innerHTML = ''
+
+      const empty = document.createElement('option')
+      empty.value = ''
+      empty.textContent = options.length ? 'Selecione um toolkit' : 'Nenhum toolkit encontrado'
+      dadosToolkitSelect.appendChild(empty)
+
+      options.forEach(option=>{
+        const el = document.createElement('option')
+        el.value = option.id
+        el.textContent = option.label
+        dadosToolkitSelect.appendChild(el)
+      })
+
+      if(selectedDadosToolkit && options.some(option=>option.id===selectedDadosToolkit)){
+        dadosToolkitSelect.value = selectedDadosToolkit
+      }else if(options.length === 1){
+        selectedDadosToolkit = options[0].id
+        dadosToolkitSelect.value = selectedDadosToolkit
+        localStorage.setItem(DADOS_TOOLKIT_KEY,selectedDadosToolkit)
+      }else{
+        selectedDadosToolkit = dadosToolkitSelect.value || ''
+      }
+
+      if(selectedDadosToolkit){
+        const selected = options.find(option=>option.id===selectedDadosToolkit)
+        setToolkitTitle(selected?.name || selectedDadosToolkit)
+        setToolkitStatus('Pronto para consultar este toolkit.','ok')
+      }else if(options.length){
+        setToolkitTitle('Selecione o toolkit')
+        setToolkitStatus(`${options.length} toolkits carregados. Escolha um para consultar os dados.`,'')
+      }else{
+        setToolkitTitle('Selecione o toolkit')
+        setToolkitStatus('Nenhum toolkit retornou do endpoint.','error')
+      }
+    }
+
+    async function loadDadosToolkits(force=false){
+      if(dadosToolkitsLoaded && !force) return true
+      if(!dadosToolkitSelect) return false
+
+      dadosToolkitSelect.disabled = true
+      setToolkitStatus('Carregando toolkits...','')
+
+      try{
+        let response = await fetch(WEBHOOK_TOOLKITS_URL,{method:'GET'})
+        if(!response.ok) response = await fetch(WEBHOOK_TOOLKITS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
+        if(!response.ok) throw new Error(`Erro ${response.status}`)
+
+        const contentType = response.headers.get('content-type') || ''
+        let payload = contentType.includes('application/json') ? await response.json() : await response.text()
+        if(typeof payload === 'string'){
+          try{ payload = JSON.parse(payload) }catch(error){}
+        }
+        const options = extractToolkitOptions(payload)
+
+        renderToolkitOptions(options)
+        dadosToolkitsLoaded = true
+        return options.length > 0
+      }catch(error){
+        dadosToolkitsLoaded = false
+        renderToolkitOptions([])
+        setToolkitStatus('Nao consegui carregar a lista de toolkits agora. Tente atualizar em alguns segundos.','error')
+        return false
+      }finally{
+        dadosToolkitSelect.disabled = false
+      }
+    }
+
+    function ensureDadosToolkitSelected(){
+      if(sourceConsulta !== 'dados') return true
+      selectedDadosToolkit = dadosToolkitSelect?.value || selectedDadosToolkit || ''
+
+      if(selectedDadosToolkit){
+        localStorage.setItem(DADOS_TOOLKIT_KEY,selectedDadosToolkit)
+        return true
+      }
+
+      setToolkitStatus('Selecione um toolkit antes de consultar os dados.','error')
+      homeStatus.textContent = 'Escolha um toolkit para eu saber qual base consultar.'
+      homeStatus.className = 'status error'
+      return false
+    }
 
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
 
@@ -3248,10 +3532,12 @@ body.questions-mode .individual-dependency-panel,
         : 'Consultar'
 
       updateSuggestions()
+      if(sourceConsulta === 'dados') loadDadosToolkits()
     }
 
     function openEnvironment(source, pushState=true){
       setSource(source)
+      document.body.classList.add('context-active')
       const landingEl = document.getElementById('landing')
       if(landingEl) landingEl.style.display='none'
       chat.classList.remove('active')
@@ -3298,7 +3584,7 @@ body.questions-mode .individual-dependency-panel,
       currentConversation=null
       messages.innerHTML=''
       chat.classList.remove('active')
-      document.body.classList.remove('chat-open')
+      document.body.classList.remove('chat-open','context-active')
       home.classList.remove('active')
       home.style.display='none'
       mapping.classList.remove('active')
@@ -3317,12 +3603,14 @@ body.questions-mode .individual-dependency-panel,
       if(!suggestions) return
 
       const dados = [
-        'Quantos produtores ativos existem?',
-        'Quantas propriedades ativas existem?',
-        'Qual o percentual de mulheres entre produtores ativos?',
-        'Qual a idade média dos produtores ativos?',
-        'Qual o volume total produzido por commodity?',
-        'Quais os 10 projetos com mais produtores?'
+        'Me passa um resumo executivo do projeto',
+        'Qual a distribuição de nível dos produtores?',
+        'Quais são os principais avanços do projeto?',
+        'Quais são os principais desafios do projeto?',
+        'Me passa um resumo de interações de campo em 2026',
+        'Qual o percentual de produtores 100% respondidos?',
+        'Me passa um resumo executivo do produtor ALBARO MOREIRA',
+        'Me passa um resumo executivo da carteira do extensionista ALVARO TADEO'
       ]
 
       const publicacoes = [
@@ -3423,6 +3711,206 @@ body.questions-mode .individual-dependency-panel,
       }
     }
 
+    function humanizeDataKey(key){
+      const labels = {
+        intent:'Intenção',
+        title:'Título',
+        message:'Resumo',
+        toolkit:'Toolkit',
+        level:'Nível',
+        nivel:'Nível',
+        total_produtores:'Produtores',
+        total_produtores_elegiveis:'Produtores elegíveis',
+        total_acoes:'Ações',
+        total_interacoes_geral:'Interações',
+        total_extensionistas:'Extensionistas',
+        total_dias_com_interacao:'Dias com interação',
+        total_meses_com_interacao:'Meses com interação',
+        media_interacao_por_extensionista:'Média por extensionista',
+        media_interacao_por_produtor:'Média por produtor',
+        media_interacao_por_dia:'Média por dia',
+        media_interacao_por_mes:'Média por mês',
+        weak_point:'Desafio',
+        topic_txt:'Tema',
+        pillar_txt:'Pilar',
+        question_txt:'Pergunta',
+        question_class:'Criticidade',
+        action_status:'Status',
+        farmer_name:'Produtor',
+        extensionist_name:'Extensionista',
+        id_manager:'ID produtor',
+        id_toolkit:'Toolkit'
+      }
+      return labels[key] || String(key).replace(/_/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase())
+    }
+
+    function formatDataValue(value){
+      if(value === null || value === undefined || value === '') return '-'
+      if(Array.isArray(value)) return value.map(formatDataValue).join(', ')
+      if(typeof value === 'object'){
+        return Object.entries(value)
+          .map(([key,val])=>`${humanizeDataKey(key)}: ${formatDataValue(val)}`)
+          .join(' | ')
+      }
+      return String(value)
+    }
+
+    function collectColumns(rows, payload={}){
+      const priority = ['nivel','level','total_produtores','total_produtores_elegiveis','weak_point','question_txt','topic_txt','pillar_txt','question_class','action_status','total_acoes','total_interacoes','farmer_name','extensionist_name']
+      let keys = [...new Set(rows.flatMap(row=>Object.keys(row || {})))]
+
+      if(keys.includes('nivel') && keys.includes('level')){
+        keys = keys.filter(key=>key !== 'level')
+      }
+
+      const filterToolkit = payload.filters?.toolkit || payload.toolkit
+      if(filterToolkit){
+        keys = keys.filter(key=>{
+          if(key === 'id_toolkit') return false
+          if(key === 'toolkit') return !rows.every(row=>String(row?.[key] || '') === String(filterToolkit))
+          return true
+        })
+      }
+
+      return keys.sort((a,b)=>{
+        const ai = priority.indexOf(a)
+        const bi = priority.indexOf(b)
+        if(ai >= 0 || bi >= 0) return (ai >= 0 ? ai : 999) - (bi >= 0 ? bi : 999)
+        return a.localeCompare(b,'pt-BR')
+      })
+    }
+
+    function buildDataTable(rows, payload={}){
+      const wrap = document.createElement('div')
+      wrap.className = 'data-table-wrap'
+      const table = document.createElement('table')
+      table.className = 'data-table'
+      const columns = collectColumns(rows, payload)
+
+      const thead = document.createElement('thead')
+      const headRow = document.createElement('tr')
+      columns.forEach(column=>{
+        const th = document.createElement('th')
+        th.textContent = humanizeDataKey(column)
+        headRow.appendChild(th)
+      })
+      thead.appendChild(headRow)
+
+      const tbody = document.createElement('tbody')
+      rows.forEach(row=>{
+        const tr = document.createElement('tr')
+        columns.forEach(column=>{
+          const td = document.createElement('td')
+          td.textContent = formatDataValue(row?.[column])
+          tr.appendChild(td)
+        })
+        tbody.appendChild(tr)
+      })
+
+      table.appendChild(thead)
+      table.appendChild(tbody)
+      wrap.appendChild(table)
+      return wrap
+    }
+
+    function buildDataResponse(payload){
+      if(Array.isArray(payload)) payload = payload[0] || null
+      if(!payload || typeof payload !== 'object') return null
+      if(!('success' in payload) && !payload.title && !payload.message && !Array.isArray(payload.data)) return null
+
+      const wrap = document.createElement('div')
+      wrap.className = 'data-response'
+
+      const head = document.createElement('div')
+      head.className = 'data-response-head'
+      const title = document.createElement('div')
+      title.className = 'data-response-title'
+      title.textContent = payload.title || 'Resultado da consulta'
+      head.appendChild(title)
+
+      if(payload.message){
+        const message = document.createElement('div')
+        message.className = 'data-response-message'
+        message.textContent = payload.message
+        head.appendChild(message)
+      }
+
+      const filters = payload.filters && typeof payload.filters === 'object'
+        ? Object.entries(payload.filters).filter(([,value])=>value !== null && value !== undefined && value !== '')
+        : []
+      if(filters.length){
+        const filterWrap = document.createElement('div')
+        filterWrap.className = 'data-response-filters'
+        filters.forEach(([key,value])=>{
+          const chip = document.createElement('span')
+          chip.className = 'data-filter-chip'
+          chip.textContent = `${humanizeDataKey(key)}: ${formatDataValue(value)}`
+          filterWrap.appendChild(chip)
+        })
+        head.appendChild(filterWrap)
+      }
+
+      wrap.appendChild(head)
+
+      const metricEntries = Object.entries(payload)
+        .filter(([key,value])=>!['success','intent','title','message','filters','data'].includes(key) && (typeof value !== 'object' || value === null))
+
+      if(metricEntries.length){
+        const metrics = document.createElement('div')
+        metrics.className = 'data-metrics'
+        metricEntries.forEach(([key,value])=>{
+          const card = document.createElement('div')
+          card.className = 'data-metric'
+          const label = document.createElement('div')
+          label.className = 'data-metric-label'
+          label.textContent = humanizeDataKey(key)
+          const number = document.createElement('div')
+          number.className = 'data-metric-value'
+          number.textContent = formatDataValue(value)
+          card.append(label,number)
+          metrics.appendChild(card)
+        })
+        wrap.appendChild(metrics)
+      }
+
+      const data = Array.isArray(payload.data) ? payload.data : []
+      if(data.length){
+        const objectRows = data.filter(item=>item && typeof item === 'object' && !Array.isArray(item))
+        if(objectRows.length === data.length){
+          if(objectRows.every(row=>'nivel' in row && 'total_produtores' in row)){
+            const levelMetrics = document.createElement('div')
+            levelMetrics.className = 'data-metrics'
+            objectRows.forEach(row=>{
+              const card = document.createElement('div')
+              card.className = 'data-metric'
+              const label = document.createElement('div')
+              label.className = 'data-metric-label'
+              label.textContent = formatDataValue(row.nivel)
+              const number = document.createElement('div')
+              number.className = 'data-metric-value'
+              number.textContent = formatDataValue(row.total_produtores)
+              card.append(label,number)
+              levelMetrics.appendChild(card)
+            })
+            wrap.appendChild(levelMetrics)
+          }
+          wrap.appendChild(buildDataTable(objectRows, payload))
+        }else{
+          const list = document.createElement('div')
+          list.className = 'data-list'
+          data.forEach(item=>{
+            const row = document.createElement('div')
+            row.className = 'data-list-item'
+            row.textContent = formatDataValue(item)
+            list.appendChild(row)
+          })
+          wrap.appendChild(list)
+        }
+      }
+
+      return wrap
+    }
+
     function buildSourceCards(payload){
       const normalized = normalizeCardsPayload(payload)
       if(!normalized) return null
@@ -3473,7 +3961,7 @@ body.questions-mode .individual-dependency-panel,
         const kicker = document.createElement('div'); kicker.className='source-card-kicker'; kicker.textContent = card.fonte || urlDomain(card.url) || 'Fonte institucional'
         const title = document.createElement('div'); title.className='source-card-title'; title.textContent = card.titulo
         const desc = document.createElement('div'); desc.className='source-card-description'; desc.textContent = card.descricao
-        const meta = document.createElement('div'); meta.className='source-card-meta'; meta.textContent = [card.data, urlDomain(card.url)].filter(Boolean).join(' • ')
+        const meta = document.createElement('div'); meta.className='source-card-meta'; meta.textContent = [card.data, urlDomain(card.url)].filter(Boolean).join(' â€¢ ')
         const action = document.createElement('div'); action.className='source-card-action'; action.innerHTML = 'Saiba mais <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         body.appendChild(kicker); body.appendChild(title); if(card.descricao) body.appendChild(desc); if(meta.textContent) body.appendChild(meta); if(normalizeExternalUrl(card.url)) body.appendChild(action)
         a.appendChild(thumb); a.appendChild(body); cardsWrap.appendChild(a)
@@ -3501,7 +3989,7 @@ renderHistory()}
           <div class="history-item-top">
             <div class="history-main">
               <div class="history-question">${escapeHtml(title)}</div>
-              <div class="history-meta">${total} pergunta(s) • ${escapeHtml(c.updatedAt||'')}</div>
+              <div class="history-meta">${total} pergunta(s) â€¢ ${escapeHtml(c.updatedAt||'')}</div>
             </div>
             <div class="history-actions">
               <button class="history-action-btn rename" title="Renomear conversa" data-id="${c.id}">
@@ -3578,9 +4066,12 @@ renderHistory()}
       if(loading){
         bubble.innerHTML='<div class="thinking-wrap"><span>Pensando</span><span class="typing-dots"><span></span><span></span><span></span></span></div>'
       }else{
-const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
-        const richCards = parsedPayload ? buildSourceCards(parsedPayload) : null
-        if(richCards){
+        const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
+        const dataResponse = parsedPayload ? buildDataResponse(parsedPayload) : null
+        const richCards = !dataResponse && parsedPayload ? buildSourceCards(parsedPayload) : null
+        if(dataResponse){
+          bubble.appendChild(dataResponse)
+        }else if(richCards){
           bubble.appendChild(richCards)
         }else{
           const contentBox=document.createElement('div')
@@ -3593,10 +4084,14 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
       row.appendChild(bubble);messages.appendChild(row);messages.scrollTop=messages.scrollHeight;return row
     }
     function startChat(){home.style.display='none';document.body.classList.add('chat-open');chat.classList.add('active')}
-    function openConversation(c){currentConversation=c;setSource(c.source||c.messages?.find(m=>m.source)?.source||'dados');document.getElementById('landing').style.display='none';home.classList.add('active');startChat();messages.innerHTML='';c.messages.forEach(m=>addMessage(m.role,m.content,m.mode))}
+    function openConversation(c){currentConversation=c;setSource(c.source||c.messages?.find(m=>m.source)?.source||'dados');document.body.classList.add('context-active');document.getElementById('landing').style.display='none';home.classList.add('active');startChat();messages.innerHTML='';c.messages.forEach(m=>addMessage(m.role,m.content,m.mode))}
     function newConversation(){currentConversation={id:String(Date.now()),createdAt:new Date().toLocaleString('pt-BR'),updatedAt:new Date().toLocaleString('pt-BR'),source:sourceConsulta,messages:[]}}
     async function ask(pergunta){
       if(!pergunta.trim())return
+      if(sourceConsulta === 'dados'){
+        if(!dadosToolkitsLoaded) await loadDadosToolkits()
+        if(!ensureDadosToolkitSelected()) return
+      }
       if(!currentConversation)newConversation()
       currentConversation.source = sourceConsulta
       startChat()
@@ -3615,7 +4110,7 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
         const webhookUrl = sourceConsulta === 'publicacoes' ? WEBHOOK_PUBLICACOES_URL : WEBHOOK_DADOS_URL
         const payload = sourceConsulta === 'publicacoes'
           ? {pergunta, fonte_consulta:'publicacoes', formato:'link_card'}
-          : {pergunta, tipo_saida:mode, fonte_consulta:'dados_internos'}
+          : {pergunta, toolkit:selectedDadosToolkit, session_id:currentConversation.id, tipo_saida:mode, fonte_consulta:'dados_internos'}
 
         const controller = new AbortController()
         timeoutId = setTimeout(() => controller.abort(), 60000)
@@ -4895,9 +5390,9 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
             <div class="library-item-text">${escapeHtml(q.text)}</div>
             <div class="library-item-meta">
               <span>${escapeHtml(q.pillar || '-')}</span>
-              <span>·</span>
+              <span>Â·</span>
               <span>${escapeHtml(q.topic || '-')}</span>
-              ${q.questionClass ? `<span>·</span><span>${escapeHtml(q.questionClass)}</span>` : ''}
+              ${q.questionClass ? `<span>Â·</span><span>${escapeHtml(q.questionClass)}</span>` : ''}
             </div>
           </div>
         </div>`
@@ -5276,6 +5771,21 @@ const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
     homeQuestion.addEventListener('keydown',e=>{if(e.key==='Enter')ask(homeQuestion.value.trim())})
     chatQuestion.addEventListener('keydown',e=>{if(e.key==='Enter'){const p=chatQuestion.value.trim();chatQuestion.value='';ask(p)}})
     document.getElementById('homeClearBtn').addEventListener('click',()=>{homeQuestion.value='';homeStatus.textContent='';document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));homeQuestion.focus()})
+    dadosToolkitSelect?.addEventListener('change',()=>{
+      selectedDadosToolkit = dadosToolkitSelect.value || ''
+      if(selectedDadosToolkit){
+        localStorage.setItem(DADOS_TOOLKIT_KEY,selectedDadosToolkit)
+        const label = dadosToolkitSelect.options[dadosToolkitSelect.selectedIndex]?.textContent || selectedDadosToolkit
+        setToolkitTitle(label.replace(/\s+\(\d+\s+produtores\)$/i,''))
+        setToolkitStatus('Pronto para consultar este toolkit.','ok')
+        homeStatus.textContent = ''
+      }else{
+        localStorage.removeItem(DADOS_TOOLKIT_KEY)
+        setToolkitTitle('Selecione o toolkit')
+        setToolkitStatus('Selecione um toolkit para consultar os dados.','')
+      }
+    })
+    dadosToolkitReloadBtn?.addEventListener('click',()=>loadDadosToolkits(true))
     document.getElementById('newQueryBtn').addEventListener('click',()=>{currentConversation=null;messages.innerHTML='';chat.classList.remove('active');document.body.classList.remove('chat-open');document.getElementById('landing').style.display='none';home.classList.add('active');home.style.display='flex';homeQuestion.value='';homeQuestion.focus()})
     document.getElementById('printBtn').addEventListener('click',()=>window.print())
     document.getElementById('historyBtn').addEventListener('click',()=>{
@@ -5428,7 +5938,7 @@ document.addEventListener('DOMContentLoaded', () => {
       count.textContent = String(currentCount + 1)
       const item = document.createElement('div')
       item.className = 'library-item is-new'
-      item.innerHTML = `<input class="library-item-check" type="checkbox" /><div class="library-item-body"><div class="library-item-top"><span class="library-item-qid">${payload.qid}</span><span class="library-pill new">NEW</span></div><div class="library-item-text">${payload.questionText}</div><div class="library-item-meta"><span>${payload.pillar || '-'}</span><span>·</span><span>${payload.topic || '-'}</span></div></div>`
+      item.innerHTML = `<input class="library-item-check" type="checkbox" /><div class="library-item-body"><div class="library-item-top"><span class="library-item-qid">${payload.qid}</span><span class="library-pill new">NEW</span></div><div class="library-item-text">${payload.questionText}</div><div class="library-item-meta"><span>${payload.pillar || '-'}</span><span>Â·</span><span>${payload.topic || '-'}</span></div></div>`
       list.prepend(item)
     }
 
@@ -6388,3 +6898,8 @@ document.addEventListener('click', function(e){
 
 </body>
 </html>
+
+
+
+
+
