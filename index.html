@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -2703,6 +2703,40 @@ body.questions-mode .individual-dependency-panel,
 @media(max-width:900px){.mapping-dashboard{grid-template-columns:1fr 1fr}.mapping-filters-grid{grid-template-columns:1fr}.mapping-question-head{display:grid}.mapping-status-badge{justify-self:start}}
 @media(max-width:760px){.mapping-dashboard{grid-template-columns:1fr}.mapping-card-actions{display:grid;grid-template-columns:1fr}.mapping-icon-btn{justify-content:center;width:100%}.mapping-card-preview{align-items:flex-start}.mapping-card-preview img{width:84px;height:64px}}
 
+
+
+/* V27.15 - Centralização da landing */
+.landing{
+  justify-content:center !important;
+  min-height:calc(100vh - 54px - 58px) !important;
+  padding-top:32px !important;
+  padding-bottom:32px !important;
+}
+.central-grid{
+  width:100% !important;
+  max-width:860px !important;
+  margin:20px auto 0 !important;
+  display:grid !important;
+  grid-template-columns:repeat(auto-fit, minmax(320px, 380px)) !important;
+  justify-content:center !important;
+  align-items:stretch !important;
+}
+.central-box{
+  width:100% !important;
+}
+@media(max-width:760px){
+  .landing{
+    justify-content:flex-start !important;
+    min-height:auto !important;
+    padding-top:28px !important;
+  }
+  .central-grid{
+    max-width:100% !important;
+    grid-template-columns:1fr !important;
+    margin-top:14px !important;
+  }
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -4021,6 +4055,47 @@ body.questions-mode .individual-dependency-panel,
     }
 
     function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY))||[]}catch(_){return[]}}
+
+    function getConversationSummary(){
+      return (currentConversation?.conversationSummary || currentConversation?.conversation_summary || '').trim()
+    }
+
+    function extractConversationSummary(payload){
+      const parsed = typeof payload === 'string' ? tryParseJsonResponse(payload) : payload
+      if(!parsed) return ''
+
+      if(Array.isArray(parsed)){
+        for(const item of parsed){
+          const summary = extractConversationSummary(item)
+          if(summary) return summary
+        }
+        return ''
+      }
+
+      if(typeof parsed !== 'object') return ''
+
+      const direct = [
+        parsed.conversation_summary,
+        parsed.conversationSummary,
+        parsed.summary,
+        parsed.memory_summary,
+        parsed.context_summary,
+        parsed.data?.conversation_summary,
+        parsed.data?.conversationSummary,
+        parsed.json?.conversation_summary,
+        parsed.json?.conversationSummary
+      ].find(value=>typeof value === 'string' && value.trim())
+
+      return direct ? direct.trim() : ''
+    }
+
+    function updateConversationSummaryFromResponse(payload){
+      const summary = extractConversationSummary(payload)
+      if(summary && currentConversation){
+        currentConversation.conversationSummary = summary.slice(0, 2000)
+      }
+    }
+
     function saveConversation(){if(!currentConversation)return;const h=getHistory(),i=h.findIndex(x=>x.id===currentConversation.id);if(i>=0)h[i]=currentConversation;else h.unshift(currentConversation);localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,30)));
 renderHistory()}
     function renderHistory(){
@@ -4140,7 +4215,7 @@ renderHistory()}
     }
     function startChat(){home.style.display='none';document.body.classList.add('chat-open');chat.classList.add('active')}
     function openConversation(c){currentConversation=c;setSource(c.source||c.messages?.find(m=>m.source)?.source||'dados');document.body.classList.add('context-active');document.getElementById('landing').style.display='none';home.classList.add('active');startChat();messages.innerHTML='';c.messages.forEach(m=>addMessage(m.role,m.content,m.mode))}
-    function newConversation(){currentConversation={id:String(Date.now()),createdAt:new Date().toLocaleString('pt-BR'),updatedAt:new Date().toLocaleString('pt-BR'),source:sourceConsulta,messages:[]}}
+    function newConversation(){currentConversation={id:String(Date.now()),createdAt:new Date().toLocaleString('pt-BR'),updatedAt:new Date().toLocaleString('pt-BR'),source:sourceConsulta,conversationSummary:'',messages:[]}}
     async function ask(pergunta){
       if(!pergunta.trim())return
       if(sourceConsulta === 'dados'){
@@ -4163,9 +4238,10 @@ renderHistory()}
 
       try{
         const webhookUrl = sourceConsulta === 'publicacoes' ? WEBHOOK_PUBLICACOES_URL : WEBHOOK_DADOS_URL
+        const conversationSummary = getConversationSummary()
         const payload = sourceConsulta === 'publicacoes'
-          ? {pergunta, fonte_consulta:'publicacoes', formato:'link_card'}
-          : {pergunta, toolkit:selectedDadosToolkit, session_id:currentConversation.id, tipo_saida:'resposta', fonte_consulta:'dados_internos'}
+          ? {pergunta, conversation_summary:conversationSummary, fonte_consulta:'publicacoes', formato:'link_card'}
+          : {pergunta, conversation_summary:conversationSummary, toolkit:selectedDadosToolkit, session_id:currentConversation.id, tipo_saida:'resposta', fonte_consulta:'dados_internos'}
 
         const controller = new AbortController()
         timeoutId = setTimeout(() => controller.abort(), 60000)
@@ -4212,6 +4288,8 @@ renderHistory()}
 
         if(!r.ok)throw new Error(t||`Erro ${r.status}`)
         if(!t || !t.trim()) throw new Error('sem_resposta')
+
+        updateConversationSummaryFromResponse(t)
 
         loadingRow.remove()
         addMessage('assistant',t,mode)
@@ -6953,7 +7031,6 @@ document.addEventListener('click', function(e){
 
 </body>
 </html>
-
 
 
 
