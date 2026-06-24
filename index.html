@@ -2717,6 +2717,64 @@ body.questions-mode .individual-dependency-panel,
 #backToLandingBtn{
   display:none!important;
 }
+
+/* Central unificada: ações da conversa travadas no rodapé */
+body.chat-open .messages{
+  padding-bottom:132px!important;
+}
+
+body.chat-open .chat-top{
+  position:fixed!important;
+  top:auto!important;
+  left:24px!important;
+  right:24px!important;
+  bottom:22px!important;
+  width:auto!important;
+  height:46px!important;
+  padding:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  background:transparent!important;
+  pointer-events:none!important;
+  z-index:90!important;
+}
+
+body.chat-open #newQueryBtn,
+body.chat-open #printBtn{
+  pointer-events:auto!important;
+  height:46px!important;
+  min-height:46px!important;
+  max-height:46px!important;
+  padding:0 22px!important;
+  background:#fff!important;
+  box-shadow:0 10px 28px rgba(15,23,42,.08)!important;
+}
+
+@media(max-width:760px){
+  body.chat-open .messages{
+    padding-bottom:150px!important;
+  }
+
+  body.chat-open .chat-top{
+    left:12px!important;
+    right:12px!important;
+    bottom:calc(76px + env(safe-area-inset-bottom))!important;
+    height:42px!important;
+    gap:10px!important;
+    pointer-events:auto!important;
+  }
+
+  body.chat-open #newQueryBtn,
+  body.chat-open #printBtn{
+    flex:1 1 0!important;
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
+    padding:0 12px!important;
+  }
+}
 .central-grid{
   width:100% !important;
   max-width:860px !important;
@@ -2929,7 +2987,7 @@ body.questions-mode .individual-dependency-panel,
           </div>
           <div class="library-search">
             <svg viewBox="0 0 24 24" fill="none"><path d="M10.8 18.1a7.3 7.3 0 1 1 0-14.6 7.3 7.3 0 0 1 0 14.6Z" stroke="currentColor" stroke-width="2"/><path d="m16.2 16.2 4.3 4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input id="librarySearch" type="text" placeholder="Buscar por QID, pilar ou textoâ€¦" autocomplete="off" />
+            <input id="librarySearch" type="text" placeholder="Buscar por QID, pilar ou texto…" autocomplete="off" />
           </div>
           <div class="library-filters">
             <select id="libraryFilterPillar" class="library-filter-select" aria-label="Filtrar por Pillar">
@@ -3113,7 +3171,7 @@ body.questions-mode .individual-dependency-panel,
                   <span class="builder-tooltip" data-tip="Respostas válidas para questões de escolha. Pressione Enter para adicionar cada opção.">i</span>
                 </label>
                 <div class="responses-wrap" id="responsesWrap">
-                  <input id="responsesInput" class="responses-input" type="text" placeholder="Digite e pressione Enterâ€¦" />
+                  <input id="responsesInput" class="responses-input" type="text" placeholder="Digite e pressione Enter…" />
                 </div>
                 <div class="builder-field-help">Pressione Enter para adicionar cada resposta possível.</div>
               </div>
@@ -3633,31 +3691,15 @@ body.questions-mode .individual-dependency-panel,
       const suggestions = document.getElementById('suggestions')
       if(!suggestions) return
 
-      const dados = [
+      const lista = [
         'Me passa um resumo executivo do projeto',
         'Qual a distribuição de nível dos produtores?',
         'Quais são os principais avanços do projeto?',
         'Quais são os principais desafios do projeto?',
-        'Me passa um resumo de interações de campo em 2026',
         'Qual o percentual de produtores 100% respondidos?'
-      ]
-
-      const publicacoes = [
-        'Me conte mais sobre agricultura regenerativa na cadeia do café',
-        'O que a Solidaridad publicou sobre EUDR?',
-        'Quais publicações falam sobre café e sustentabilidade?',
-        'Quais conteúdos explicam agricultura de baixo carbono?',
-        'Me resuma os principais temas publicados sobre clima',
-        'Quais artigos falam sobre produção livre de desmatamento?'
-      ]
-
-      const lista = [
-        ...dados,
-        ...publicacoes
       ]
       suggestions.innerHTML = lista.map(text => `<button class="chip">${escapeHtml(text)}</button>`).join('')
     }
-
     function escapeHtml(t){return String(t).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;")}
     function looksLikeHtml(t){return /<\s*(table|div|section|article|h1|h2|h3|p|ul|ol|li|span|strong|style)\b/i.test(t)}
     function tryParseJsonResponse(content){
@@ -5787,9 +5829,9 @@ renderHistory()}
             <div class="library-item-text">${escapeHtml(q.text)}</div>
             <div class="library-item-meta">
               <span>${escapeHtml(q.pillar || '-')}</span>
-              <span>Â·</span>
+              <span>·</span>
               <span>${escapeHtml(q.topic || '-')}</span>
-              ${q.questionClass ? `<span>Â·</span><span>${escapeHtml(q.questionClass)}</span>` : ''}
+              ${q.questionClass ? `<span>·</span><span>${escapeHtml(q.questionClass)}</span>` : ''}
             </div>
           </div>
         </div>`
@@ -6337,7 +6379,7 @@ document.addEventListener('DOMContentLoaded', () => {
       count.textContent = String(currentCount + 1)
       const item = document.createElement('div')
       item.className = 'library-item is-new'
-      item.innerHTML = `<input class="library-item-check" type="checkbox" /><div class="library-item-body"><div class="library-item-top"><span class="library-item-qid">${payload.qid}</span><span class="library-pill new">NEW</span></div><div class="library-item-text">${payload.questionText}</div><div class="library-item-meta"><span>${payload.pillar || '-'}</span><span>Â·</span><span>${payload.topic || '-'}</span></div></div>`
+      item.innerHTML = `<input class="library-item-check" type="checkbox" /><div class="library-item-body"><div class="library-item-top"><span class="library-item-qid">${payload.qid}</span><span class="library-pill new">NEW</span></div><div class="library-item-text">${payload.questionText}</div><div class="library-item-meta"><span>${payload.pillar || '-'}</span><span>·</span><span>${payload.topic || '-'}</span></div></div>`
       list.prepend(item)
     }
 
