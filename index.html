@@ -2712,6 +2712,11 @@ body.questions-mode .individual-dependency-panel,
   padding-top:32px !important;
   padding-bottom:32px !important;
 }
+
+/* Central unificada: sem tela de escolha de ambiente */
+#backToLandingBtn{
+  display:none!important;
+}
 .central-grid{
   width:100% !important;
   max-width:860px !important;
@@ -3296,7 +3301,7 @@ body.questions-mode .individual-dependency-panel,
       <input id="homeQuestion" placeholder="Faça sua consulta" autocomplete="off" />
       <button class="voice-btn" id="homeVoiceBtn" title="Falar pergunta"><svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" stroke="currentColor" stroke-width="2"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     </div>
-    <div class="knowledge-hint" id="knowledgeHint">A Central de Conhecimento retorna links e referências em cards. Para dados quantitativos, volte aos ambientes e acesse Dados.</div>
+    <div class="knowledge-hint" id="knowledgeHint">Pergunte sobre dados internos, publicações, artigos ou temas institucionais. A Central identifica o melhor caminho automaticamente.</div>
 
     <div class="suggestions" id="suggestions">
       <button class="chip">Quantos produtores ativos existem?</button>
@@ -3375,10 +3380,12 @@ body.questions-mode .individual-dependency-panel,
     const WEBHOOK_GERADOR_URL='https://joaogoncalves.app.n8n.cloud/webhook/Path:%20gerador-conteudo'
     const HISTORY_KEY='central_inteligente_conversas_v10'
     const DADOS_TOOLKIT_KEY='central_inteligente_toolkit_dados_v1'
+    const CONVERSATION_SUMMARY_KEY='sdu_conversation_summary'
     const home=document.getElementById('home'),chat=document.getElementById('chat'),mapping=document.getElementById('mapping'),messages=document.getElementById('messages'),homeQuestion=document.getElementById('homeQuestion'),chatQuestion=document.getElementById('chatQuestion'),homeStatus=document.getElementById('homeStatus'),drawer=document.getElementById('drawer'),historyList=document.getElementById('historyList'),confirmModal=document.getElementById('confirmModal')
     const dadosToolkitSelect=document.getElementById('dadosToolkitSelect'),dadosToolkitStatus=document.getElementById('dadosToolkitStatus'),dadosToolkitReloadBtn=document.getElementById('dadosToolkitReloadBtn'),dadosToolkitTitle=document.getElementById('dadosToolkitTitle')
     let mode='resposta',sourceConsulta='dados',currentConversation=null
     let selectedDadosToolkit=localStorage.getItem(DADOS_TOOLKIT_KEY)||'',dadosToolkitsLoaded=false
+    let currentConversationSummary=sessionStorage.getItem(CONVERSATION_SUMMARY_KEY)||''
 
     function normalizeToolkitOption(item){
       const source = item?.json && typeof item.json === 'object' ? item.json : item
@@ -3515,10 +3522,8 @@ body.questions-mode .individual-dependency-panel,
         return true
       }
 
-      setToolkitStatus('Selecione um toolkit antes de consultar os dados.','error')
-      homeStatus.textContent = 'Escolha um toolkit para eu saber qual base consultar.'
-      homeStatus.className = 'status error'
-      return false
+      setToolkitStatus('Sem toolkit selecionado. Perguntas de conhecimento continuam funcionando; dados internos podem pedir um toolkit.','')
+      return true
     }
 
     function setMode(m){mode=m;document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m))}
@@ -3555,6 +3560,9 @@ body.questions-mode .individual-dependency-panel,
     }
 
     function openEnvironment(source, pushState=true){
+      if(sourceConsulta && sourceConsulta !== source){
+        clearConversationSummary()
+      }
       setSource(source)
       document.body.classList.add('context-active')
       const landingEl = document.getElementById('landing')
@@ -3601,6 +3609,7 @@ body.questions-mode .individual-dependency-panel,
 
     function backToLanding(pushState=false){
       currentConversation=null
+      clearConversationSummary()
       messages.innerHTML=''
       chat.classList.remove('active')
       document.body.classList.remove('chat-open','context-active')
@@ -3611,10 +3620,13 @@ body.questions-mode .individual-dependency-panel,
       const generatorEl = document.getElementById('generator')
       if(generatorEl){generatorEl.classList.remove('active');generatorEl.style.display='none'}
       document.body.classList.remove('source-dados','source-publicacoes','source-mapeamento','source-gerador')
-      sourceConsulta='dados'
       const landingEl = document.getElementById('landing')
-      if(landingEl) landingEl.style.display='flex'
-      if(pushState) history.pushState({sduSource:'landing'}, '', location.pathname + location.search)
+      if(landingEl) landingEl.style.display='none'
+      setSource('dados')
+      home.classList.add('active')
+      home.style.display='flex'
+      setTimeout(()=>homeQuestion.focus(),50)
+      if(pushState) history.pushState({sduSource:'dados'}, '', '#dados')
     }
 
     function updateSuggestions(){
@@ -3639,7 +3651,10 @@ body.questions-mode .individual-dependency-panel,
         'Quais artigos falam sobre produção livre de desmatamento?'
       ]
 
-      const lista = sourceConsulta === 'publicacoes' ? publicacoes : dados
+      const lista = [
+        ...dados,
+        ...publicacoes
+      ]
       suggestions.innerHTML = lista.map(text => `<button class="chip">${escapeHtml(text)}</button>`).join('')
     }
 
@@ -3684,6 +3699,134 @@ body.questions-mode .individual-dependency-panel,
         return parsed
       }catch(_){
         return null
+      }
+    }
+
+    function stripCodeFence(text){
+      return String(text || '')
+        .replace(/^```json\s*/i,'')
+        .replace(/^```\s*/i,'')
+        .replace(/```$/i,'')
+        .trim()
+    }
+
+    function tryParseJson(text){
+      try{
+        return JSON.parse(stripCodeFence(text))
+      }catch(_){
+        return null
+      }
+    }
+
+    function normalizeWebhookResult(result){
+      if(!result){
+        return {answer:'',conversation_summary:'',raw:result}
+      }
+
+      if(Array.isArray(result)){
+        if(result.length === 1) return normalizeWebhookResult(result[0])
+        return {answer:JSON.stringify(result),conversation_summary:'',raw:result}
+      }
+
+      if(typeof result === 'string'){
+        const parsed = tryParseJson(result)
+        if(parsed) return normalizeWebhookResult(parsed)
+        return {answer:result,conversation_summary:'',raw:result}
+      }
+
+      if(typeof result !== 'object'){
+        return {answer:String(result),conversation_summary:'',raw:result}
+      }
+
+      const directSummary =
+        result.conversation_summary ||
+        result.conversationSummary ||
+        result.memory_summary ||
+        result.context_summary ||
+        result.data?.conversation_summary ||
+        result.data?.conversationSummary ||
+        result.json?.conversation_summary ||
+        result.json?.conversationSummary ||
+        ''
+
+      const directAnswer =
+        result.answer ||
+        result.resposta ||
+        result.natural_answer ||
+        result.final_answer ||
+        result.message ||
+        result.mensagem ||
+        result.data?.answer ||
+        result.data?.resposta ||
+        ''
+
+      const geminiText = result?.content?.parts?.length
+        ? result.content.parts.map(part=>part?.text || '').join('\n').trim()
+        : ''
+
+      if(geminiText){
+        const parsedGemini = tryParseJson(geminiText)
+        if(parsedGemini){
+          const normalizedGemini = normalizeWebhookResult(parsedGemini)
+          return {
+            answer: normalizedGemini.answer || directAnswer || geminiText,
+            conversation_summary: normalizedGemini.conversation_summary || directSummary || '',
+            raw: result
+          }
+        }
+
+        return {
+          answer: directAnswer || geminiText,
+          conversation_summary: directSummary || '',
+          raw: result
+        }
+      }
+
+      const candidateText = result?.candidates?.[0]?.content?.parts?.length
+        ? result.candidates[0].content.parts.map(part=>part?.text || '').join('\n').trim()
+        : ''
+
+      if(candidateText){
+        const parsedCandidate = tryParseJson(candidateText)
+        if(parsedCandidate){
+          const normalizedCandidate = normalizeWebhookResult(parsedCandidate)
+          return {
+            answer: normalizedCandidate.answer || directAnswer || candidateText,
+            conversation_summary: normalizedCandidate.conversation_summary || directSummary || '',
+            raw: result
+          }
+        }
+
+        return {
+          answer: directAnswer || candidateText,
+          conversation_summary: directSummary || '',
+          raw: result
+        }
+      }
+
+      for(const key of ['output','text','response']){
+        const value = result[key]
+        if(typeof value !== 'string' || !value.trim()) continue
+        const parsed = tryParseJson(value)
+        if(parsed){
+          const normalized = normalizeWebhookResult(parsed)
+          return {
+            answer: normalized.answer || directAnswer || value,
+            conversation_summary: normalized.conversation_summary || directSummary || '',
+            raw: result
+          }
+        }
+        return {
+          answer: directAnswer || value,
+          conversation_summary: directSummary || '',
+          raw: result
+        }
+      }
+
+      return {
+        answer: directAnswer || JSON.stringify(result),
+        conversation_summary: directSummary || '',
+        raw: result
       }
     }
 
@@ -3749,7 +3892,37 @@ body.questions-mode .individual-dependency-panel,
 
       const content = document.createElement('div')
       content.className = 'natural-data-answer'
-      content.textContent = answer
+      const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g
+      let lastIndex = 0
+      let match
+
+      while((match = pattern.exec(answer))){
+        if(match.index > lastIndex){
+          content.appendChild(document.createTextNode(answer.slice(lastIndex, match.index)))
+        }
+
+        const label = match[1] || match[3]
+        const url = match[2] || match[3]
+        const link = document.createElement('a')
+        link.href = url
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        link.textContent = label
+        content.appendChild(link)
+
+        lastIndex = pattern.lastIndex
+      }
+
+      if(lastIndex < answer.length){
+        content.appendChild(document.createTextNode(answer.slice(lastIndex)))
+      }
+
+      const normalized = normalizeCardsPayload(payload)
+      if(normalized?.cards?.length){
+        const cards = buildSourceCards({intro:'',cards:normalized.cards})
+        if(cards) content.appendChild(cards)
+      }
+
       return content
     }
 
@@ -3757,11 +3930,12 @@ body.questions-mode .individual-dependency-panel,
       if(Array.isArray(payload)) payload = payload[0] || null
       if(!payload || typeof payload !== 'object') return null
       const cards = Array.isArray(payload.cards) ? payload.cards :
+        Array.isArray(payload.links) ? payload.links :
         Array.isArray(payload.fontes) ? payload.fontes :
         Array.isArray(payload.publicacoes) ? payload.publicacoes :
         Array.isArray(payload.resultados) ? payload.resultados :
         payload.url ? [payload] : []
-      const intro = payload.intro || payload.resumo || payload.mensagem || payload.texto || ''
+      const intro = payload.intro || payload.resumo || payload.mensagem || payload.texto || payload.answer || ''
       if(!cards.length && !intro && payload.tipo !== 'link_card' && payload.tipo !== 'cards_fontes') return null
       return {
         intro,
@@ -3788,7 +3962,6 @@ body.questions-mode .individual-dependency-panel,
       if(!/^https?:\/\//i.test(clean)) return ''
       try{
         const parsed = new URL(clean)
-        if(!parsed.hostname.includes('solidaridad')) return ''
         return parsed.href
       }catch(_){
         return ''
@@ -4056,11 +4229,86 @@ body.questions-mode .individual-dependency-panel,
 
     function getHistory(){try{return JSON.parse(localStorage.getItem(HISTORY_KEY))||[]}catch(_){return[]}}
 
+    function persistConversationSummary(summary){
+      currentConversationSummary = String(summary || '').trim().slice(0,2000)
+      sessionStorage.setItem(CONVERSATION_SUMMARY_KEY,currentConversationSummary)
+
+      if(currentConversation){
+        currentConversation.conversationSummary = currentConversationSummary
+        currentConversation.conversation_summary = currentConversationSummary
+      }
+    }
+
+    function clearConversationSummary(){
+      currentConversationSummary = ''
+      sessionStorage.removeItem(CONVERSATION_SUMMARY_KEY)
+
+      if(currentConversation){
+        currentConversation.conversationSummary = ''
+        currentConversation.conversation_summary = ''
+      }
+    }
+
     function getConversationSummary(){
-      return (currentConversation?.conversationSummary || currentConversation?.conversation_summary || '').trim()
+      const summary = (
+        currentConversationSummary ||
+        currentConversation?.conversationSummary ||
+        currentConversation?.conversation_summary ||
+        sessionStorage.getItem(CONVERSATION_SUMMARY_KEY) ||
+        ''
+      ).trim()
+
+      if(summary && summary !== currentConversationSummary){
+        persistConversationSummary(summary)
+      }
+
+      return summary
+    }
+
+    function compactMemoryText(text, maxLength=900){
+      return String(text || '')
+        .replace(/\s+/g,' ')
+        .trim()
+        .slice(0,maxLength)
+    }
+
+    function buildFallbackConversationSummary(pergunta, payload){
+      const normalized = normalizeWebhookResult(payload)
+      const answer = compactMemoryText(normalized.answer || '', 1000)
+      const question = compactMemoryText(pergunta || '', 360)
+
+      if(!question && !answer) return ''
+
+      return compactMemoryText(
+        [
+          question ? `Pergunta anterior do usuário: ${question}` : '',
+          answer ? `Resposta anterior da central: ${answer}` : ''
+        ].filter(Boolean).join(' | '),
+        1800
+      )
+    }
+
+    function buildContextualQuestion(pergunta, conversationSummary){
+      const summary = compactMemoryText(conversationSummary || '', 1600)
+      const question = String(pergunta || '').trim()
+
+      if(!summary) return question
+
+      return [
+        'Contexto da conversa anterior:',
+        summary,
+        '',
+        'Pergunta atual do usuário:',
+        question,
+        '',
+        'Use o contexto anterior somente para resolver referências como "esses", "desses", "isso", "o primeiro ponto", "no mesmo tema" ou continuações da conversa. Responda sempre à pergunta atual.'
+      ].join('\n')
     }
 
     function extractConversationSummary(payload){
+      const normalized = normalizeWebhookResult(payload)
+      if(normalized.conversation_summary) return normalized.conversation_summary.trim()
+
       const parsed = typeof payload === 'string' ? tryParseJsonResponse(payload) : payload
       if(!parsed) return ''
 
@@ -4089,14 +4337,17 @@ body.questions-mode .individual-dependency-panel,
       return direct ? direct.trim() : ''
     }
 
-    function updateConversationSummaryFromResponse(payload){
-      const summary = extractConversationSummary(payload)
-      if(summary && currentConversation){
-        currentConversation.conversationSummary = summary.slice(0, 2000)
+    function updateConversationSummaryFromResponse(payload, pergunta=''){
+      const summary = extractConversationSummary(payload) || buildFallbackConversationSummary(pergunta, payload)
+      if(summary){
+        persistConversationSummary(summary)
+        console.log('[SDU memória] conversation_summary atualizado:', currentConversationSummary)
+      }else{
+        console.warn('[SDU memória] resposta sem conversation_summary. Mantendo memória anterior:', currentConversationSummary)
       }
     }
 
-    function saveConversation(){if(!currentConversation)return;const h=getHistory(),i=h.findIndex(x=>x.id===currentConversation.id);if(i>=0)h[i]=currentConversation;else h.unshift(currentConversation);localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,30)));
+    function saveConversation(){if(!currentConversation)return;currentConversation.conversationSummary=currentConversationSummary;currentConversation.conversation_summary=currentConversationSummary;const h=getHistory(),i=h.findIndex(x=>x.id===currentConversation.id);if(i>=0)h[i]=currentConversation;else h.unshift(currentConversation);localStorage.setItem(HISTORY_KEY,JSON.stringify(h.slice(0,30)));
 renderHistory()}
     function renderHistory(){
       const h=getHistory()
@@ -4174,6 +4425,7 @@ renderHistory()}
 
         if(currentConversation?.id===id){
           currentConversation=null
+          clearConversationSummary()
           messages.innerHTML=''
           chat.classList.remove('active')
           document.body.classList.remove('chat-open')
@@ -4214,34 +4466,40 @@ renderHistory()}
       row.appendChild(bubble);messages.appendChild(row);messages.scrollTop=messages.scrollHeight;return row
     }
     function startChat(){home.style.display='none';document.body.classList.add('chat-open');chat.classList.add('active')}
-    function openConversation(c){currentConversation=c;setSource(c.source||c.messages?.find(m=>m.source)?.source||'dados');document.body.classList.add('context-active');document.getElementById('landing').style.display='none';home.classList.add('active');startChat();messages.innerHTML='';c.messages.forEach(m=>addMessage(m.role,m.content,m.mode))}
-    function newConversation(){currentConversation={id:String(Date.now()),createdAt:new Date().toLocaleString('pt-BR'),updatedAt:new Date().toLocaleString('pt-BR'),source:sourceConsulta,conversationSummary:'',messages:[]}}
+    function openConversation(c){currentConversation=c;persistConversationSummary(c.conversationSummary || c.conversation_summary || '');setSource(c.source||c.messages?.find(m=>m.source)?.source||'dados');document.body.classList.add('context-active');document.getElementById('landing').style.display='none';home.classList.add('active');startChat();messages.innerHTML='';c.messages.forEach(m=>addMessage(m.role,m.content,m.mode))}
+    function newConversation(){clearConversationSummary();currentConversation={id:String(Date.now()),createdAt:new Date().toLocaleString('pt-BR'),updatedAt:new Date().toLocaleString('pt-BR'),source:sourceConsulta,conversationSummary:'',conversation_summary:'',messages:[]};persistConversationSummary('')}
     async function ask(pergunta){
       if(!pergunta.trim())return
-      if(sourceConsulta === 'dados'){
-        if(!dadosToolkitsLoaded) await loadDadosToolkits()
-        if(!ensureDadosToolkitSelected()) return
-      }
+      if(!dadosToolkitsLoaded) await loadDadosToolkits()
+      ensureDadosToolkitSelected()
       if(!currentConversation)newConversation()
       currentConversation.source = sourceConsulta
       startChat()
       currentConversation.messages.push({role:'user',content:pergunta,mode,source:sourceConsulta})
       addMessage('user',pergunta)
 
-      const loadingText = sourceConsulta === 'publicacoes'
-        ? 'Consultando a base de conhecimento... Isso pode levar alguns segundos.'
-        : 'Pensando...'
+      const loadingText = 'Pensando...'
 
       const loadingRow=addMessage('assistant',loadingText,mode,true)
 
       let timeoutId = null
 
       try{
-        const webhookUrl = sourceConsulta === 'publicacoes' ? WEBHOOK_PUBLICACOES_URL : WEBHOOK_DADOS_URL
+        const webhookUrl = WEBHOOK_DADOS_URL
         const conversationSummary = getConversationSummary()
-        const payload = sourceConsulta === 'publicacoes'
-          ? {pergunta, conversation_summary:conversationSummary, fonte_consulta:'publicacoes', formato:'link_card'}
-          : {pergunta, conversation_summary:conversationSummary, toolkit:selectedDadosToolkit, session_id:currentConversation.id, tipo_saida:'resposta', fonte_consulta:'dados_internos'}
+        const perguntaOriginal = pergunta
+        const perguntaContextualizada = buildContextualQuestion(perguntaOriginal, conversationSummary)
+        console.log('[SDU memória] enviando conversation_summary:', conversationSummary)
+        const payload = {
+          pergunta:perguntaContextualizada,
+          pergunta_original:perguntaOriginal,
+          conversation_summary:conversationSummary,
+          toolkit:selectedDadosToolkit || '',
+          session_id:currentConversation.id,
+          tipo_saida:'resposta',
+          fonte_consulta:'central_unificada',
+          formato:'summary_links'
+        }
 
         const controller = new AbortController()
         timeoutId = setTimeout(() => controller.abort(), 60000)
@@ -4260,6 +4518,7 @@ renderHistory()}
 
         const contentType = r.headers.get('content-type') || ''
         let t
+        let rawWebhookResult
 
         if(contentType.includes('application/json')){
           const json = await r.json()
@@ -4281,20 +4540,25 @@ renderHistory()}
             }
           }
 
+          rawWebhookResult = normalizedJson
           t = JSON.stringify(normalizedJson)
         }else{
           t = await r.text()
+          rawWebhookResult = t
         }
 
         if(!r.ok)throw new Error(t||`Erro ${r.status}`)
         if(!t || !t.trim()) throw new Error('sem_resposta')
 
-        updateConversationSummaryFromResponse(t)
+        const normalizedWebhook = normalizeWebhookResult(rawWebhookResult)
+        updateConversationSummaryFromResponse(normalizedWebhook, perguntaOriginal)
 
         loadingRow.remove()
         addMessage('assistant',t,mode)
 
         currentConversation.messages.push({role:'assistant',content:t,mode,source:sourceConsulta})
+        currentConversation.conversationSummary = currentConversationSummary
+        currentConversation.conversation_summary = currentConversationSummary
         currentConversation.updatedAt=new Date().toLocaleString('pt-BR')
         saveConversation()
         homeStatus.textContent=''
@@ -5906,6 +6170,7 @@ renderHistory()}
     document.getElementById('homeClearBtn').addEventListener('click',()=>{homeQuestion.value='';homeStatus.textContent='';document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));homeQuestion.focus()})
     dadosToolkitSelect?.addEventListener('change',()=>{
       selectedDadosToolkit = dadosToolkitSelect.value || ''
+      clearConversationSummary()
       if(selectedDadosToolkit){
         localStorage.setItem(DADOS_TOOLKIT_KEY,selectedDadosToolkit)
         const label = dadosToolkitSelect.options[dadosToolkitSelect.selectedIndex]?.textContent || selectedDadosToolkit
@@ -5919,7 +6184,7 @@ renderHistory()}
       }
     })
     dadosToolkitReloadBtn?.addEventListener('click',()=>loadDadosToolkits(true))
-    document.getElementById('newQueryBtn').addEventListener('click',()=>{currentConversation=null;messages.innerHTML='';chat.classList.remove('active');document.body.classList.remove('chat-open');document.getElementById('landing').style.display='none';home.classList.add('active');home.style.display='flex';homeQuestion.value='';homeQuestion.focus()})
+    document.getElementById('newQueryBtn').addEventListener('click',()=>{currentConversation=null;clearConversationSummary();messages.innerHTML='';chat.classList.remove('active');document.body.classList.remove('chat-open');document.getElementById('landing').style.display='none';home.classList.add('active');home.style.display='flex';homeQuestion.value='';homeQuestion.focus()})
     document.getElementById('printBtn').addEventListener('click',()=>window.print())
     document.getElementById('historyBtn').addEventListener('click',()=>{
       renderHistory()
@@ -5932,7 +6197,7 @@ renderHistory()}
     })
     document.getElementById('clearHistoryBtn').addEventListener('click',()=>confirmModal.classList.add('open'))
     document.getElementById('cancelClearBtn').addEventListener('click',()=>confirmModal.classList.remove('open'))
-    document.getElementById('confirmClearBtn').addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);confirmModal.classList.remove('open');renderHistory()})
+    document.getElementById('confirmClearBtn').addEventListener('click',()=>{localStorage.removeItem(HISTORY_KEY);currentConversation=null;clearConversationSummary();confirmModal.classList.remove('open');renderHistory()})
     attachVoice(document.getElementById('homeVoiceBtn'),homeQuestion)
     attachVoice(document.getElementById('chatVoiceBtn'),chatQuestion)
 
@@ -5940,13 +6205,14 @@ renderHistory()}
     document.getElementById('backToLandingMappingBtn')?.addEventListener('click',()=>{if(location.hash) history.back(); else backToLanding(false)})
     document.getElementById('backToLandingGeneratorBtn')?.addEventListener('click',()=>{if(location.hash) history.back(); else backToLanding(false)})
     updateMappingQuestion()
-    window.addEventListener('popstate',()=>{const hash=location.hash.replace('#',''); if(hash==='dados'||hash==='publicacoes'||hash==='mapeamento'||hash==='gerador') openEnvironment(hash,false); else backToLanding(false)})
+    window.addEventListener('popstate',()=>{const hash=location.hash.replace('#',''); if(hash==='dados'||hash==='publicacoes'||hash==='mapeamento'||hash==='gerador') openEnvironment(hash,false); else openEnvironment('dados',false)})
 
     setSource('dados')
-    home.style.display='none'
+    home.style.display='flex'
     if(mapping) mapping.style.display='none'
     const generatorInit=document.getElementById('generator'); if(generatorInit) generatorInit.style.display='none'
-    const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='flex'
+    const landingInit=document.getElementById('landing'); if(landingInit) landingInit.style.display='none'
+    openEnvironment('dados',false)
     renderHistory()
   </script>
 <script>
@@ -7031,7 +7297,3 @@ document.addEventListener('click', function(e){
 
 </body>
 </html>
-
-
-
-
