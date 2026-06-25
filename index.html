@@ -3436,6 +3436,7 @@ body.chat-open #printBtn{
     const WEBHOOK_AVALIACAO_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia'
     const WEBHOOK_MAPPING_QUESTIONS_URL='https://joaogoncalves.app.n8n.cloud/webhook/avaliacao-ia-questions'
     const WEBHOOK_GERADOR_URL='https://joaogoncalves.app.n8n.cloud/webhook/Path:%20gerador-conteudo'
+    const REQUEST_TIMEOUT_MS=180000
     const HISTORY_KEY='central_inteligente_conversas_v10'
     const DADOS_TOOLKIT_KEY='central_inteligente_toolkit_dados_v1'
     const CONVERSATION_SUMMARY_KEY='sdu_conversation_summary'
@@ -4486,11 +4487,11 @@ renderHistory()}
         bubble.innerHTML='<div class="thinking-wrap"><span>Pensando</span><span class="typing-dots"><span></span><span></span><span></span></span></div>'
       }else{
         const parsedPayload = role==='assistant' ? tryParseJsonResponse(content) : null
-        const naturalDataAnswer = role==='assistant' && sourceConsulta==='dados' && parsedPayload
+        const naturalDataAnswer = role==='assistant' && parsedPayload
           ? buildNaturalDataAnswer(parsedPayload)
           : null
-        const dataResponse = !naturalDataAnswer && parsedPayload ? buildDataResponse(parsedPayload) : null
-        const richCards = !naturalDataAnswer && !dataResponse && parsedPayload ? buildSourceCards(parsedPayload) : null
+        const richCards = !naturalDataAnswer && parsedPayload ? buildSourceCards(parsedPayload) : null
+        const dataResponse = !naturalDataAnswer && !richCards && parsedPayload ? buildDataResponse(parsedPayload) : null
         if(naturalDataAnswer){
           bubble.appendChild(naturalDataAnswer)
         }else if(dataResponse){
@@ -4544,7 +4545,7 @@ renderHistory()}
         }
 
         const controller = new AbortController()
-        timeoutId = setTimeout(() => controller.abort(), 60000)
+        timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
         const r = await fetch(webhookUrl,{
           method:'POST',
