@@ -804,6 +804,18 @@ body.source-dados .actions{
   font-size:15px;
   line-height:1.7;
 }
+.answer-source-notice{
+  white-space:normal;
+  margin:0 0 14px;
+  padding:10px 12px;
+  border:1px solid #f3d36a;
+  border-radius:14px;
+  background:#fff8dc;
+  color:#5f4500;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:600;
+}
 body.source-publicacoes .search-box{
   margin-top:4px;
 }
@@ -3929,19 +3941,83 @@ body.chat-open #printBtn{
       return ''
     }
 
+    function getAnswerSourceNotice(payload){
+      const source = Array.isArray(payload) ? payload[0]?.source_scope : payload?.source_scope
+      const hasData = Array.isArray(payload) ? payload[0]?.has_data : payload?.has_data
+
+      if(hasData === false){
+        return 'Não consegui encontrar informações suficientes para responder a essa solicitação. Tente reformular sua pergunta ou utilizar termos mais específicos.'
+      }
+
+      if(source === 'internal_knowledge'){
+        return 'Base Oficial: Encontrei esta informação na base de conhecimento oficial da Fundação Solidaridad.'
+      }
+
+      if(source === 'external_web'){
+        return 'Fontes Externas: Não encontrei esse conteúdo na base oficial da Fundação Solidaridad. A resposta foi elaborada a partir de fontes públicas e confiáveis.'
+      }
+
+      return ''
+    }
+
+    function stripDuplicatedLinksSection(answer, hasCards){
+      if(!hasCards) return answer
+
+      let cleaned = String(answer || '')
+
+      const markers = [
+        /\n\s*links relacionados\s*:/i,
+        /\n\s*fontes relacionadas\s*:/i,
+        /\n\s*publica[cç][oõ]es relacionadas\s*:/i,
+        /\n\s*conte[uú]dos relacionados\s*:/i,
+        /\n\s*refer[eê]ncias\s*:/i
+      ]
+
+      const indexes = markers
+        .map(pattern => {
+          const match = cleaned.match(pattern)
+          return match ? match.index : -1
+        })
+        .filter(index => index >= 0)
+
+      if(indexes.length){
+        cleaned = cleaned.slice(0, Math.min(...indexes))
+      }
+
+      cleaned = cleaned
+        .replace(/\n\s*[-•]\s*https?:\/\/\S+/gi, '')
+        .replace(/\n\s*https?:\/\/\S+/gi, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+
+      return cleaned || answer
+    }
+
     function buildNaturalDataAnswer(payload){
       const answer = extractNaturalDataAnswer(payload)
       if(!answer) return null
 
       const content = document.createElement('div')
       content.className = 'natural-data-answer'
+      const sourceNotice = getAnswerSourceNotice(payload)
+      const normalized = normalizeCardsPayload(payload)
+      const hasCards = Boolean(normalized?.cards?.length)
+      const displayAnswer = stripDuplicatedLinksSection(answer, hasCards)
+
+      if(sourceNotice){
+        const notice = document.createElement('div')
+        notice.className = 'answer-source-notice'
+        notice.textContent = sourceNotice
+        content.appendChild(notice)
+      }
+
       const pattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g
       let lastIndex = 0
       let match
 
-      while((match = pattern.exec(answer))){
+      while((match = pattern.exec(displayAnswer))){
         if(match.index > lastIndex){
-          content.appendChild(document.createTextNode(answer.slice(lastIndex, match.index)))
+          content.appendChild(document.createTextNode(displayAnswer.slice(lastIndex, match.index)))
         }
 
         const label = match[1] || match[3]
@@ -3956,12 +4032,11 @@ body.chat-open #printBtn{
         lastIndex = pattern.lastIndex
       }
 
-      if(lastIndex < answer.length){
-        content.appendChild(document.createTextNode(answer.slice(lastIndex)))
+      if(lastIndex < displayAnswer.length){
+        content.appendChild(document.createTextNode(displayAnswer.slice(lastIndex)))
       }
 
-      const normalized = normalizeCardsPayload(payload)
-      if(normalized?.cards?.length){
+      if(hasCards){
         const cards = buildSourceCards({intro:'',cards:normalized.cards})
         if(cards) content.appendChild(cards)
       }
